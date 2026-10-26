@@ -1,0 +1,97 @@
+{
+  "expo": {
+    "name": "Pocketleaf",
+    "slug": "pocketleaf",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "app.pocketleaf.notes"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#FBFAF8",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "allowBackup": true,
+      "package": "app.pocketleaf.notes",
+      "permissions": [
+        "SCHEDULE_EXACT_ALARM"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "output": "single",
+      "name": "Pocketleaf"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      "expo-sqlite",
+      "expo-sharing",
+      "@react-native-community/datetimepicker",
+      "expo-notifications",
+      "expo-video",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Pocketleaf adds the photos and videos you choose to your notes.",
+          "cameraPermission": "Pocketleaf uses the camera when you take a photo or video for a note.",
+          "microphonePermission": "Pocketleaf records sound with the videos you take for a note."
+        }
+      ],
+      [
+        "expo-secure-store",
+        {
+          "configureAndroidBackup": false,
+          "faceIDPermission": false
+        }
+      ],
+      "./plugins/withBackupRules",
+      [
+        "expo-share-intent",
+        {
+          "androidIntentFilters": [
+            "text/*",
+            "image/*",
+            "video/*",
+            "audio/*"
+          ],
+          "androidMultiIntentFilters": [
+            "image/*",
+            "video/*"
+          ],
+          "disableIOS": true
+        }
+      ],
+      [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "Pocketleaf uses the microphone to record voice notes.",
+          "speechRecognitionPermission": "Pocketleaf turns your voice notes into text.",
+          "androidSpeechServicePackages": [
+            "com.google.android.googlequicksearchbox",
+            "com.google.android.as"
+          ]
+        }
+      ],
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "Pocketleaf uses the microphone to record voice notes.",
+          "enableBackgroundPlayback": false,
+          "enableBackgroundRecording": false
+        }
+      ]
+    ],
+    "scheme": "pocketleaf",
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "_about": "Read by sweep.py, listing.py and replica-deploy. avoid = the original's names and identifiers; domains = its domains; colors = its brand colours. Written by replica-brand 2026-10-18.",
+  "name": "Pocketleaf",
+  "avoid": [
+    "App Notes",
+    "Security Lab",
+    "com.note.todolist.noteapp",
+    "todolist.noteapp"
+  ],
+  "domains": [],
+  "colors": [],
+  "_todo": "colors: still to measure. Nobody has seen the original's icon or screens up close yet. Add its main colours here (from your install, or the Play listing icon), then re-run the sweep. domains: the original has no website; its privacy policy is a Google Doc."
+}

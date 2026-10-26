@@ -1,0 +1,36 @@
+feature,area,priority,original,clone,notes
+Create a text note with title and body,notes,must,yes,yes,listed | S03; F01 checked in the web build
+Autosave while typing (no save button),notes,must,yes,yes,"unverified - category convention; never lose text if the app is killed | 500 ms debounce + flush on blur, background, back and close; survives a reload"
+Edit an existing note,notes,must,yes,yes,listed | S03/S04
+Delete a note with a confirm step,notes,must,yes,yes,"unverified | S10 → confirm dialog → trash, with Undo"
+Notes list on home (newest first),home,must,yes,yes,"unverified layout | S01 masonry grid, pinned first; skeleton while loading"
+Create a checklist (to-do list),checklists,must,yes,yes,listed | S02 → S04
+Add edit and delete checklist rows,checklists,must,yes,yes,"listed | Enter adds below, Backspace on empty removes; × button"
+Tick and untick checklist items,checklists,must,yes,yes,listed | ticked items move to a Done group
+Per-note background colour,styling,must,yes,yes,"listed | S05, 10 colours, light and dark versions"
+Create folders,folders,must,yes,yes,listed (folders or categories) | chip row + S08; duplicate names blocked in any case
+Move a note into a folder,folders,must,yes,yes,listed | S10 → S08 picker
+Filter home by folder,folders,must,yes,yes,unverified - chips or drawer | folder chips on S01
+Search notes by text (titles bodies and checklist items),search,must,yes,yes,"listed; match accents and case-insensitive | S09; FTS5 on phones, accent-insensitive; LIKE fallback in the web preview"
+Set a reminder date and time on a note or list,reminders,must,yes,partial,"listed | S07 built, saving and scheduling logic tested; delivery on a real phone not verified yet"
+Reminder notification opens the note,reminders,must,yes,partial,unverified | tap handler and deep link built; needs a phone to verify
+Share a note or list as text via the system share sheet,sharing,must,yes,yes,listed | S10 → system share sheet; lists as ☐/☑ lines
+Per-note font and size,styling,should,yes,yes,"listed (fonts) | S06: Standard, Serif, Monospace, Handwriting; S–XL"
+Reorder checklist rows by drag,checklists,should,yes,yes,"unverified | drag handle (touch and mouse), plus Move up/down for screen readers; checked in the web build"
+Rename and delete folders (notes are kept),folders,should,yes,yes,unverified | S08; notes return to All
+Repeating reminders (daily weekly monthly),reminders,should,yes,yes,"guess | wall-clock repeats, DST-safe (tested); phone delivery not verified yet"
+Reminders survive a phone reboot and time zone change,reminders,should,yes,partial,expected behaviour; hard part | reconcile on every launch + boot receiver; not verified on a phone
+Grid or list view toggle,home,should,yes,yes,guess | top bar + S12
+Sort notes (updated created title),home,should,yes,yes,guess | S12
+Back up all notes to your own cloud (Drive or iCloud),backup,should,yes,yes,"listed (cloud backup); destination to decide in architect | S13 → JSON file → share sheet (download on web, checked)"
+Restore notes from a backup,backup,should,yes,yes,"unverified; decide merge vs replace | S13 merge by id, newer wins, nothing deleted; idempotent (checked)"
+Dark mode,settings,should,yes,yes,"guess | system, light or dark (S12)"
+Trash with restore and delete forever,notes,could,yes,yes,guess - not on the listing; confirm on your install | S11; auto-deleted after 30 days
+Undo snackbar after delete,notes,could,yes,yes,guess
+Pin notes to the top,home,could,yes,yes,guess | top bar + S10
+Automatic scheduled backup,backup,could,yes,partial,listed (automatically backs up) | daily local snapshots (last 7) picked up by the phone’s own backup; not verified on a phone
+Highlight matches in search results,search,could,yes,no,guess | not built
+Ads,monetisation,could,yes,skip,clone is for own use - nothing to monetise
+In-app purchases or premium tier,monetisation,could,yes,skip,clone is for own use
+Calendar integration,integrations,could,yes,skip,outside the chosen slice; official Google Calendar or EventKit APIs later
+Task-manager integration,integrations,could,yes,skip,outside the chosen slice

@@ -1,0 +1,102 @@
+  AAA   16.50:1  light-text               on light-bg             
+  AAA   15.26:1  light-text               on light-surface        
+  AAA   17.21:1  light-text               on light-surface-raised 
+  AA     6.47:1  light-text-muted         on light-bg             
+  AA     5.98:1  light-text-muted         on light-surface        
+  AA     6.75:1  light-text-muted         on light-surface-raised 
+  AA     6.34:1  light-on-accent          on light-accent         
+  AA     6.08:1  light-accent             on light-bg             
+  AA     6.34:1  light-accent             on light-surface-raised 
+  AA     6.30:1  light-danger             on light-bg             
+  AA     6.57:1  light-danger             on light-surface-raised 
+  AA     5.10:1  light-success            on light-bg             
+  AA     5.68:1  light-warning            on light-bg             
+  AAA   12.95:1  light-snackbar-text      on light-snackbar-bg    
+  AAA    9.60:1  light-snackbar-action    on light-snackbar-bg    
+  PASS   3.52:1  light-border-input       on light-bg             ui
+  PASS   3.67:1  light-border-input       on light-surface-raised ui
+  PASS   6.08:1  light-focus              on light-bg             ui
+  PASS   6.34:1  light-focus              on light-surface-raised ui
+  PASS   6.08:1  light-accent             on light-bg             ui
+  AAA   15.26:1  light-text               on note-light-default   
+  AA     5.98:1  light-text-muted         on note-light-default   
+  PASS   5.62:1  light-focus              on note-light-default   ui
+  AAA   13.09:1  light-text               on note-light-red       
+  AA     5.13:1  light-text-muted         on note-light-red       
+  PASS   4.82:1  light-focus              on note-light-red       ui
+  AAA   13.90:1  light-text               on note-light-orange    
+  AA     5.45:1  light-text-muted         on note-light-orange    
+  PASS   5.12:1  light-focus              on note-light-orange    ui
+  AAA   15.12:1  light-text               on note-light-yellow    
+  AA     5.93:1  light-text-muted         on note-light-yellow    
+  PASS   5.57:1  light-focus              on note-light-yellow    ui
+  AAA   13.96:1  light-text               on note-light-green     
+  AA     5.47:1  light-text-muted         on note-light-green     
+  PASS   5.15:1  light-focus              on note-light-green     ui
+  AAA   13.60:1  light-text               on note-light-teal      
+  AA     5.33:1  light-text-muted         on note-light-teal      
+  PASS   5.01:1  light-focus              on note-light-teal      ui
+  AAA   13.24:1  light-text               on note-light-blue      
+  AA     5.19:1  light-text-muted         on note-light-blue      
+  PASS   4.88:1  light-focus              on note-light-blue      ui
+  AAA   12.73:1  light-text               on note-light-purple    
+  AA     4.99:1  light-text-muted         on note-light-purple    
+  PASS   4.69:1  light-focus              on note-light-purple    ui
+  AAA   12.91:1  light-text               on note-light-pink      
+  AA     5.06:1  light-text-muted         on note-light-pink      
+  PASS   4.76:1  light-focus              on note-light-pink      ui
+  AAA   13.05:1  light-text               on note-light-gray      
+  AA     5.12:1  light-text-muted         on note-light-gray      
+  PASS   4.81:1  light-focus              on note-light-gray      ui
+  AAA   15.43:1  dark-text                on dark-bg              
+  AAA   13.81:1  dark-text                on dark-surface         
+  AAA   12.19:1  dark-text                on dark-surface-raised  
+  AAA    8.43:1  dark-text-muted          on dark-bg              
+  AAA    7.55:1  dark-text-muted          on dark-surface         
+  AA     6.66:1  dark-text-muted          on dark-surface-raised  
+  AAA    9.35:1  dark-on-accent           on dark-accent          
+  AAA   10.56:1  dark-accent              on dark-bg              
+  AAA    8.34:1  dark-accent              on dark-surface-raised  
+  AAA    8.03:1  dark-danger              on dark-bg              
+  AA     6.35:1  dark-danger              on dark-surface-raised  
+  AAA    9.90:1  dark-success             on dark-bg              
+  AAA   10.04:1  dark-warning             on dark-bg              
+  AAA   14.44:1  dark-snackbar-text       on dark-snackbar-bg     
+  AA     5.32:1  dark-snackbar-action     on dark-snackbar-bg     
+  PASS   4.20:1  dark-border-input        on dark-bg              ui
+  PASS   3.31:1  dark-border-input        on dark-surface-raised  ui
+  PASS  10.56:1  dark-focus               on dark-bg              ui
+  PASS   8.34:1  dark-focus               on dark-surface-raised  ui
+  PASS  10.56:1  dark-accent              on dark-bg              ui
+  AAA   13.81:1  dark-text                on note-dark-default    
+  AAA    7.55:1  dark-text-muted          on note-dark-default    
+  PASS   9.45:1  dark-focus               on note-dark-default    ui
+  AAA    9.74:1  dark-text                on note-dark-red        
+  AA     5.32:1  dark-text-muted          on note-dark-red        
+  PASS   6.66:1  dark-focus               on note-dark-red        ui
+  AAA    9.45:1  dark-text                on note-dark-orange     
+  AA     5.16:1  dark-text-muted          on note-dark-orange     
+  PASS   6.47:1  dark-focus               on note-dark-orange     ui
+  AAA    9.09:1  dark-text                on note-dark-yellow     
+  AA     4.97:1  dark-text-muted          on note-dark-yellow     
+  PASS   6.22:1  dark-focus               on note-dark-yellow     ui
+  AAA    9.27:1  dark-text                on note-dark-green      
+  AA     5.06:1  dark-text-muted          on note-dark-green      
+  PASS   6.34:1  dark-focus               on note-dark-green      ui
+  AAA    9.67:1  dark-text                on note-dark-teal       
+  AA     5.29:1  dark-text-muted          on note-dark-teal       
+  PASS   6.62:1  dark-focus               on note-dark-teal       ui
+  AAA    9.62:1  dark-text                on note-dark-blue       
+  AA     5.25:1  dark-text-muted          on note-dark-blue       
+  PASS   6.58:1  dark-focus               on note-dark-blue       ui
+  AAA   10.11:1  dark-text                on note-dark-purple     
+  AA     5.52:1  dark-text-muted          on note-dark-purple     
+  PASS   6.92:1  dark-focus               on note-dark-purple     ui
+  AAA    9.88:1  dark-text                on note-dark-pink       
+  AA     5.40:1  dark-text-muted          on note-dark-pink       
+  PASS   6.76:1  dark-focus               on note-dark-pink       ui
+  AAA    9.80:1  dark-text                on note-dark-gray       
+  AA     5.36:1  dark-text-muted          on note-dark-gray       
+  PASS   6.71:1  dark-focus               on note-dark-gray       ui
+
+  100 pairs, 0 failing AA
