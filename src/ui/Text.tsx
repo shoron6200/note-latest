@@ -1,8 +1,8 @@
 import { Text as RNText, type TextProps, type TextStyle, type ViewStyle } from 'react-native';
 
-import { useTheme, type Theme } from '@/theme/theme';
+import { useTheme, type Theme, type TypeName } from '@/theme/theme';
 
-type Variant = 'xs' | 'sm' | 'base' | 'lg' | 'xl' | 'display';
+type Variant = TypeName;
 type Tone = 'text' | 'muted' | 'accent' | 'danger' | 'success' | 'warning' | 'onAccent';
 
 export type AppTextProps = TextProps & {
@@ -24,15 +24,19 @@ export function toneColor(theme: Theme, tone: Tone): string {
   }[tone];
 }
 
-/** All interface text goes through this: type scale + colour role + OS font scaling (max 1.5x). */
+/**
+ * All interface text goes through this: type scale + colour role + OS font
+ * scaling (max 2x). The serif variants (entry, screen, page) set the user's
+ * own words; a weight override never applies to them (the weight is in the font).
+ */
 export function AppText({ variant = 'base', tone = 'text', weight, style, ...rest }: AppTextProps) {
   const theme = useTheme();
   const t = theme.type[variant];
   return (
     <RNText
-      maxFontSizeMultiplier={1.5}
+      maxFontSizeMultiplier={2}
       {...rest}
-      style={[t, { color: toneColor(theme, tone) }, weight ? { fontWeight: weight } : null, style]}
+      style={[t, { color: toneColor(theme, tone) }, weight && !t.fontFamily ? { fontWeight: weight } : null, style]}
     />
   );
 }

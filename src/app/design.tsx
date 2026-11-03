@@ -4,7 +4,7 @@
  * Not a user-facing screen; remove the route (or hide it) before release.
  */
 import { router, useLocalSearchParams } from 'expo-router';
-import { CheckSquare, FileText, Folder, Pin, Search, SearchX, Share2, Trash2, Bell, Palette, Type } from 'lucide-react-native';
+import { FileText, Folder, Pin, Search, SearchX, Share2, Trash2, Bell, Palette, Type } from 'lucide-react-native';
 import { useState, type ReactNode } from 'react';
 import { ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -362,7 +362,7 @@ function Gallery({ mode, setMode }: { mode: ModeSetting; setMode: (m: ModeSettin
             </Row>
           </Section>
 
-          <Section title="Snackbar, tags, FAB">
+          <Section title="Snackbar, tags, Write button">
             <Snackbar message={copy.delete.done} action={{ label: copy.delete.undo, onPress: () => {} }} />
             <Snackbar message={copy.backup.saved} />
             <Row>
@@ -371,14 +371,8 @@ function Gallery({ mode, setMode }: { mode: ModeSetting; setMode: (m: ModeSettin
               <Tag icon={Folder} label="Work" />
             </Row>
             <Row top>
-              <Fab />
-              <Fab
-                expanded
-                actions={[
-                  { label: copy.newItem.checklist, icon: CheckSquare, onPress: () => {} },
-                  { label: copy.newItem.text, icon: FileText, onPress: () => {} },
-                ]}
-              />
+              <Fab onPress={() => {}} onMore={() => {}} />
+              <Fab compact onPress={() => {}} />
             </Row>
           </Section>
 

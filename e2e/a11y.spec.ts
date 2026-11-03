@@ -7,7 +7,7 @@ test.describe('every screen passes axe (no serious or critical issues)', () => {
   });
   test('S02 new menu', async ({ page }) => {
     await openApp(page, { demo: true });
-    await button(page, 'New').click();
+    await button(page, 'More ways to start').click();
     await expectAccessible(page, 'S02');
   });
   test('S03/S05/S06/S07/S10 editor and its sheets', async ({ page }) => {
@@ -24,8 +24,7 @@ test.describe('every screen passes axe (no serious or critical issues)', () => {
   });
   test('S15 photo viewer', async ({ page }) => {
     await openApp(page);
-    await button(page, 'New').click();
-    await button(page, 'Note').click();
+    await button(page, 'Write').click();
     await page.waitForTimeout(600);
     const chooser = chooseFromGallery(page);
     const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAIAAABLbSncAAAAEklEQVR4nGPQaPiPFTEMLQkA9ywe4YzZq1EAAAAASUVORK5CYII=', 'base64');

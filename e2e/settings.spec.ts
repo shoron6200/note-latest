@@ -8,7 +8,7 @@ test('S12-H1 dark theme applies and survives a reload', async ({ page }) => {
   await page.reload();
   await expect(page.getByRole('radio', { name: 'Dark' })).toHaveAttribute('aria-checked', 'true');
   await page.goto('/');
-  await expect(page.getByText('A blank page')).toHaveCSS('color', 'rgb(236, 235, 232)'); // dark text
+  await expect(page.getByText('A blank page')).toHaveCSS('color', 'rgb(228, 233, 227)'); // dark text
 });
 
 test('S12-H2 sort by title and list view', async ({ page }) => {
@@ -16,9 +16,8 @@ test('S12-H2 sort by title and list view', async ({ page }) => {
   await page.goto('/settings');
   await page.getByRole('radio', { name: 'Title' }).click();
   await expect(page.getByRole('radio', { name: 'Title' })).toHaveAttribute('aria-checked', 'true');
+  // The index (one column) is the default view: the grid switch starts off.
   const grid = page.getByRole('switch', { name: 'Show notes as a grid', exact: true });
-  await grid.click();
-  // The switch only changes once the setting is saved, so leaving after this is safe.
   await expect(grid).toHaveAttribute('aria-checked', 'false');
   await page.goto('/');
   await expect(button(page, 'Show as grid')).toBeVisible();

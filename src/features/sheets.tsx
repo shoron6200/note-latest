@@ -53,12 +53,12 @@ export function SheetRow({
       onPress={onPress}
       style={(s: PState) => [
         styles.row,
-        { paddingHorizontal: t.space[3], borderRadius: t.radius.md, gap: t.space[3] },
+        { paddingHorizontal: t.space[3], borderRadius: t.radius.sm, gap: t.space[3] },
         (s.pressed || s.hovered) && { backgroundColor: withAlpha(t.color.text, 0.06) },
-        focusRing(t, s, t.radius.md),
+        focusRing(t, s, t.radius.sm),
       ]}
     >
-      {Icon ? <Icon size={22} color={fg} /> : null}
+      {Icon ? <Icon size={20} color={tone === 'danger' ? fg : t.color.textMuted} strokeWidth={1.75} /> : null}
       <AppText style={{ flex: 1, color: fg }} numberOfLines={1}>
         {label}
       </AppText>

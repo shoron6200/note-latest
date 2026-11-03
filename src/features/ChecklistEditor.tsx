@@ -167,9 +167,9 @@ export function ChecklistEditor({ noteId, items, font, size, editable, onDraggin
           aria-label={copy.editor.addItem}
           onPress={() => addAfter(order[order.length - 1])}
           style={(s: PState) => [
-            { flexDirection: 'row', alignItems: 'center', gap: t.space[3], minHeight: 48, paddingLeft: t.space[2] + 2, borderRadius: t.radius.md },
+            { flexDirection: 'row', alignItems: 'center', gap: t.space[3], minHeight: 48, paddingLeft: t.space[2] + 2, borderRadius: t.radius.sm },
             (s.pressed || s.hovered) && { backgroundColor: withAlpha(t.color.text, 0.05) },
-            focusRing(t, s, t.radius.md),
+            focusRing(t, s, t.radius.sm),
           ]}
         >
           <Plus size={22} color={t.color.textMuted} />
@@ -186,7 +186,7 @@ export function ChecklistEditor({ noteId, items, font, size, editable, onDraggin
             onPress={() => setShowDone(!showDone)}
             style={(s: PState) => [
               { flexDirection: 'row', alignItems: 'center', gap: t.space[2], minHeight: 44, paddingLeft: t.space[2] },
-              focusRing(t, s, t.radius.md),
+              focusRing(t, s, t.radius.sm),
             ]}
           >
             {showDone ? <ChevronDown size={18} color={t.color.textMuted} /> : <ChevronRight size={18} color={t.color.textMuted} />}

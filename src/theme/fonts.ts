@@ -1,10 +1,11 @@
 /**
  * Note fonts. All open-licensed (SIL OFL 1.1), bundled through @expo-google-fonts.
- * The interface itself uses the system font, so only notes pay for these.
+ * The interface uses the system font for its own words; Source Serif 4
+ * SemiBold sets the user's words (titles, names, the wordmark).
  */
 import { JetBrainsMono_400Regular, JetBrainsMono_700Bold } from '@expo-google-fonts/jetbrains-mono';
 import { PatrickHand_400Regular } from '@expo-google-fonts/patrick-hand';
-import { SourceSerif4_400Regular, SourceSerif4_700Bold } from '@expo-google-fonts/source-serif-4';
+import { SourceSerif4_400Regular, SourceSerif4_600SemiBold, SourceSerif4_700Bold } from '@expo-google-fonts/source-serif-4';
 import { useFonts } from 'expo-font';
 import type { TextStyle } from 'react-native';
 
@@ -13,6 +14,7 @@ import type { NoteFont } from './theme';
 export function useNoteFonts(): boolean {
   const [loaded] = useFonts({
     SourceSerif4_400Regular,
+    SourceSerif4_600SemiBold,
     SourceSerif4_700Bold,
     JetBrainsMono_400Regular,
     JetBrainsMono_700Bold,

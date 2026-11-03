@@ -142,7 +142,7 @@ function ShareForm({ share, clear }: { share: Incoming; clear: () => void }) {
 
           {labels.length > 0 && (
             <View style={{ gap: t.space[2] }}>
-              <AppText variant="xs" weight="700" tone="muted" role="heading" style={{ textTransform: 'uppercase', letterSpacing: 0.8 }}>
+              <AppText variant="sm" weight="600" tone="muted" role="heading">
                 {copy.share.labels}
               </AppText>
               <View style={styles.chips} role="group" aria-label={copy.share.labels}>
@@ -158,12 +158,12 @@ function ShareForm({ share, clear }: { share: Incoming; clear: () => void }) {
                       style={(s: PState) => [
                         styles.chip,
                         {
-                          borderRadius: t.radius.pill,
+                          borderRadius: t.radius.sm,
                           borderColor: on ? t.color.accent : t.color.border,
                           backgroundColor: on ? withAlpha(t.color.accent, 0.14) : 'transparent',
                         },
                         (s.pressed || s.hovered) && !on && { backgroundColor: withAlpha(t.color.text, 0.06) },
-                        focusRing(t, s, t.radius.pill),
+                        focusRing(t, s, t.radius.sm),
                       ]}
                     >
                       {on ? <Check size={16} color={t.color.accent} /> : <TagIcon size={16} color={t.color.textMuted} />}

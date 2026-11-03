@@ -4,7 +4,7 @@
  * type to search within it. Archived notes are found too, under "Archive".
  */
 import { router } from 'expo-router';
-import { ArrowLeft, Bell, CheckSquare, Image as ImageIcon, Mic, SearchX, Tag, X } from 'lucide-react-native';
+import { ArrowLeft, Bell, CheckSquare, Hash, Image as ImageIcon, Mic, SearchX, X } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, TextInput, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -36,7 +36,7 @@ export default function SearchScreen() {
   const labels = useQuery((r) => r.listLabels(), []).data ?? [];
   const results = useQuery((r) => r.searchNotes(query, filter), [query, filter]);
   const contentWidth = Math.min(width, 1280) - t.layout.gutter * 2;
-  const columns = settings?.viewMode === 'list' ? 1 : gridColumns(contentWidth);
+  const columns = (settings?.viewMode ?? 'list') === 'list' ? 1 : gridColumns(contentWidth);
   const typing = text.trim() !== query;
   const filterName = filter ? filterLabel(filter, labels) : null;
   const searching = !!query || !!filter;
@@ -56,8 +56,8 @@ export default function SearchScreen() {
               onPress={() => setFilter(null)}
               style={(s: PState) => [
                 styles.filterChip,
-                { backgroundColor: withAlpha(t.color.accent, 0.14), borderRadius: t.radius.pill },
-                focusRing(t, s, t.radius.pill),
+                { backgroundColor: withAlpha(t.color.accent, 0.12), borderRadius: t.radius.sm },
+                focusRing(t, s, t.radius.sm),
               ]}
             >
               <AppText variant="sm" weight="600" tone="accent" numberOfLines={1} style={{ maxWidth: 120 }}>
@@ -124,7 +124,7 @@ function filterLabel(f: SearchFilter, labels: { id: string; name: string }[]): s
 function Heading({ children }: { children: string }) {
   const t = useTheme();
   return (
-    <AppText variant="xs" weight="700" tone="muted" role="heading" style={{ textTransform: 'uppercase', letterSpacing: 0.8, marginTop: t.space[2] }}>
+    <AppText variant="sm" weight="600" tone="muted" role="heading" style={{ marginTop: t.space[2] }}>
       {children}
     </AppText>
   );
@@ -139,13 +139,13 @@ function Tile({ icon: Icon, label, onPress }: { icon: IconType; label: string; o
       onPress={onPress}
       style={(s: PState) => [
         styles.tile,
-        { backgroundColor: t.color.surface, borderRadius: t.radius.md, padding: t.space[3] },
-        (s.pressed || s.hovered) && { backgroundColor: withAlpha(t.color.text, 0.1) },
-        focusRing(t, s, t.radius.md),
+        { paddingHorizontal: t.space[4], borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: t.color.border },
+        (s.pressed || s.hovered) && { backgroundColor: withAlpha(t.color.text, 0.06) },
+        focusRing(t, s, 0),
       ]}
     >
-      <Icon size={28} color={t.color.accent} />
-      <AppText variant="sm" weight="500" numberOfLines={2} style={{ textAlign: 'center' }}>
+      <Icon size={20} color={t.color.textMuted} strokeWidth={1.75} />
+      <AppText numberOfLines={1} style={{ flex: 1 }}>
         {label}
       </AppText>
     </Pressable>
@@ -157,7 +157,7 @@ function Filters({ labels, onPick }: { labels: { id: string; name: string }[]; o
   return (
     <View style={{ gap: t.space[3] }}>
       <Heading>{copy.search.types}</Heading>
-      <View style={styles.tiles}>
+      <View style={[styles.tiles, { backgroundColor: t.color.surfaceRaised, borderRadius: t.radius.md, borderColor: t.color.border }]}>
         <Tile icon={Bell} label={copy.search.reminders} onPress={() => onPick({ kind: 'type', value: 'reminder' })} />
         <Tile icon={CheckSquare} label={copy.search.lists} onPress={() => onPick({ kind: 'type', value: 'checklist' })} />
         <Tile icon={ImageIcon} label={copy.search.media} onPress={() => onPick({ kind: 'type', value: 'media' })} />
@@ -167,9 +167,9 @@ function Filters({ labels, onPick }: { labels: { id: string; name: string }[]; o
       {labels.length > 0 && (
         <>
           <Heading>{copy.search.labels}</Heading>
-          <View style={styles.tiles}>
+          <View style={[styles.tiles, { backgroundColor: t.color.surfaceRaised, borderRadius: t.radius.md, borderColor: t.color.border }]}>
             {labels.map((l) => (
-              <Tile key={l.id} icon={Tag} label={l.name} onPress={() => onPick({ kind: 'label', id: l.id })} />
+              <Tile key={l.id} icon={Hash} label={l.name} onPress={() => onPick({ kind: 'label', id: l.id })} />
             ))}
           </View>
         </>
@@ -185,8 +185,10 @@ function Filters({ labels, onPick }: { labels: { id: string; name: string }[]; o
             onPress={() => onPick({ kind: 'color', value: c })}
             style={(s: PState) => [
               styles.swatch,
-              { backgroundColor: t.note[c], borderColor: t.color.borderInput },
-              (s.pressed || s.hovered) && { transform: [{ scale: 0.94 }] },
+              c === 'default'
+                ? { backgroundColor: t.color.surfaceRaised, borderWidth: 1.5, borderColor: t.color.borderInput }
+                : { backgroundColor: t.noteRule[c] },
+              (s.pressed || s.hovered) && { opacity: 0.8 },
               focusRing(t, s, 999),
             ]}
           />
@@ -198,9 +200,9 @@ function Filters({ labels, onPick }: { labels: { id: string; name: string }[]; o
 
 const styles = StyleSheet.create({
   bar: { flexDirection: 'row', alignItems: 'center', gap: 4, borderBottomWidth: StyleSheet.hairlineWidth },
-  filterChip: { flexDirection: 'row', alignItems: 'center', gap: 4, height: 32, paddingHorizontal: 10 },
-  tiles: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  tile: { width: 104, minHeight: 88, alignItems: 'center', justifyContent: 'center', gap: 6 },
+  filterChip: { flexDirection: 'row', alignItems: 'center', gap: 4, height: 32, paddingHorizontal: 8 },
+  tiles: { overflow: 'hidden', borderWidth: StyleSheet.hairlineWidth },
+  tile: { flexDirection: 'row', alignItems: 'center', gap: 16, minHeight: 52 },
   swatches: { flexDirection: 'row', flexWrap: 'wrap' },
-  swatch: { width: 44, height: 44, borderRadius: 22, borderWidth: 1 },
+  swatch: { width: 36, height: 36, borderRadius: 18, margin: 4 },
 });

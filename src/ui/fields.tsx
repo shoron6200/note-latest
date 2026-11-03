@@ -44,7 +44,10 @@ export function TextField({
 
   const text =
     variant === 'title'
-      ? { ...t.type.xl, ...noteFontStyle(font, true) }
+      ? // The page title is the user's words: the serif, unless the note has its own font.
+        font === 'default'
+        ? t.type.page
+        : { ...t.type.page, fontWeight: '400' as const, ...noteFontStyle(font, true) }
       : variant === 'body'
         ? { fontSize: t.noteSize[size].size, lineHeight: t.noteSize[size].line, ...noteFontStyle(font) }
         : t.type.base;
@@ -54,12 +57,12 @@ export function TextField({
       ? {
           borderWidth: focused || error ? 2 : 1,
           borderColor: error ? t.color.danger : focused ? t.color.focus : t.color.borderInput,
-          borderRadius: t.radius.md,
+          borderRadius: t.radius.sm,
           paddingHorizontal: focused || error ? t.space[3] - 1 : t.space[3],
           minHeight: 48,
         }
       : variant === 'search'
-        ? { backgroundColor: t.color.surface, borderRadius: t.radius.pill, paddingLeft: 44, paddingRight: 44, minHeight: 48 }
+        ? { backgroundColor: t.color.surface, borderRadius: t.radius.sm, paddingLeft: 44, paddingRight: 44, minHeight: 48 }
         : null;
 
   const field = (
@@ -75,7 +78,7 @@ export function TextField({
         placeholderTextColor={t.color.textMuted}
         selectionColor={t.color.accent}
         cursorColor={t.color.accent}
-        maxFontSizeMultiplier={1.5}
+        maxFontSizeMultiplier={2}
         multiline={variant === 'body'}
         textAlignVertical={variant === 'body' ? 'top' : 'center'}
         onFocus={(e) => {
@@ -183,7 +186,7 @@ export const ChecklistRow = forwardRef(function ChecklistRow(
     <View
       style={[
         styles.checkRow,
-        dragging && [{ backgroundColor: t.color.surfaceRaised, borderRadius: t.radius.md, transform: [{ scale: 1.02 }] }, t.elevation.sheet],
+        dragging && [{ backgroundColor: t.color.surfaceRaised, borderRadius: t.radius.sm }, t.elevation.sheet],
       ]}
     >
       {handleProps ? (
@@ -205,7 +208,7 @@ export const ChecklistRow = forwardRef(function ChecklistRow(
           style={[styles.handle, Platform.OS === 'web' && ({ cursor: 'grab' } as object)]}
           {...handleProps}
         >
-          <GripVertical size={20} color={t.color.textMuted} />
+          <GripVertical size={18} color={withAlpha(t.color.textMuted, 0.7)} />
         </View>
       ) : (
         <View style={styles.handleSpace} />
@@ -220,11 +223,11 @@ export const ChecklistRow = forwardRef(function ChecklistRow(
         <View
           style={[
             styles.box,
-            { borderRadius: 6, borderColor: checked ? t.color.accent : t.color.borderInput },
+            { borderRadius: t.radius.xs, borderColor: checked ? t.color.accent : t.color.textMuted },
             checked && { backgroundColor: t.color.accent },
           ]}
         >
-          {checked && <Check size={16} color={t.color.onAccent} strokeWidth={3} />}
+          {checked && <Check size={14} color={t.color.onAccent} strokeWidth={3} />}
         </View>
       </Pressable>
       <TextInput
@@ -243,7 +246,7 @@ export const ChecklistRow = forwardRef(function ChecklistRow(
         multiline
         // Native multiline inputs grow with their text; a web textarea needs a starting row count.
         numberOfLines={Platform.OS === 'web' ? 1 : undefined}
-        maxFontSizeMultiplier={1.5}
+        maxFontSizeMultiplier={2}
         selectionColor={t.color.accent}
         style={[styles.checkText, textStyle, { outlineStyle: 'none' } as object]}
       />
@@ -257,19 +260,19 @@ export const ChecklistRow = forwardRef(function ChecklistRow(
           focusRing(t, s, t.radius.pill),
         ]}
       >
-        <X size={18} color={t.color.textMuted} />
+        <X size={18} color={withAlpha(t.color.textMuted, 0.7)} />
       </Pressable>}
     </View>
   );
 });
 
 const styles = StyleSheet.create({
-  leading: { position: 'absolute', left: 14, zIndex: 1 },
+  leading: { position: 'absolute', left: 12, zIndex: 1 },
   trailing: { position: 'absolute', right: 0, width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
   checkRow: { flexDirection: 'row', alignItems: 'flex-start', minHeight: 48 },
   handle: { width: 32, height: 48, alignItems: 'center', justifyContent: 'center' },
   handleSpace: { width: 8 },
   boxTarget: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
-  box: { width: 22, height: 22, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
+  box: { width: 20, height: 20, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center' },
   checkText: { flex: 1, paddingVertical: 12 },
 });

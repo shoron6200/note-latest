@@ -117,7 +117,7 @@ function RowFrame({
 }) {
   const t = useTheme();
   return (
-    <View style={[styles.row, { backgroundColor: withAlpha(t.color.text, 0.06), borderRadius: t.radius.pill, paddingLeft: t.space[1] }]}>
+    <View style={[styles.row, { backgroundColor: withAlpha(t.color.text, 0.06), borderRadius: t.radius.sm, paddingLeft: t.space[1] }]}>
       <Pressable
         role="button"
         aria-label={`${playing ? copy.voice.pause : copy.voice.play}: ${label}`}

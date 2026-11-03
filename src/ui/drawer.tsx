@@ -1,6 +1,7 @@
 /**
- * The navigation drawer: slides in from the left over a scrim, like Keep's.
- * Back, a tap on the scrim, or picking an entry closes it.
+ * The navigation drawer: a leaf that slides in from the left over a scrim
+ * (a fade with Reduce Motion on). Back, a tap on the scrim, or picking an
+ * entry closes it.
  */
 import { useEffect, useState, type ReactNode } from 'react';
 import { Animated, BackHandler, Easing, Modal, Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
@@ -9,16 +10,17 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { copy } from '@/copy';
 import { useTheme, withAlpha } from '@/theme/theme';
 
-import type { IconType } from './controls';
+import { pressWash, ripple, type IconType } from './controls';
+import { useReducedMotion } from './motion';
 import { AppText, focusRing, type PState } from './Text';
 
-const WIDTH = 320;
 
 export function NavDrawer({ open, onClose, header, children }: { open: boolean; onClose: () => void; header?: ReactNode; children: ReactNode }) {
   const t = useTheme();
   const insets = useSafeAreaInsets();
   const { width: screen } = useWindowDimensions();
-  const width = Math.min(WIDTH, Math.round(screen * 0.85));
+  const width = Math.min(t.layout['drawer-width'], Math.round(screen * 0.85));
+  const reduced = useReducedMotion();
   // Kept in state (not a ref) so reading it while rendering is allowed.
   const [x] = useState(() => new Animated.Value(-width));
   const [mounted, setMounted] = useState(open);
@@ -28,13 +30,13 @@ export function NavDrawer({ open, onClose, header, children }: { open: boolean; 
   useEffect(() => {
     Animated.timing(x, {
       toValue: open ? 0 : -width,
-      duration: open ? 220 : 180,
+      duration: reduced ? 0 : open ? t.motion.base : t.motion.fast,
       easing: open ? Easing.out(Easing.cubic) : Easing.in(Easing.cubic),
       useNativeDriver: true,
     }).start(({ finished }) => {
       if (finished && !open) setMounted(false);
     });
-  }, [open, width, x]);
+  }, [open, width, x, reduced, t.motion.base, t.motion.fast]);
 
   useEffect(() => {
     if (!open) return;
@@ -61,8 +63,8 @@ export function NavDrawer({ open, onClose, header, children }: { open: boolean; 
             width,
             transform: [{ translateX: x }],
             backgroundColor: t.color.surfaceRaised,
-            borderTopRightRadius: t.radius.lg,
-            borderBottomRightRadius: t.radius.lg,
+            borderTopRightRadius: t.radius.md,
+            borderBottomRightRadius: t.radius.md,
             paddingTop: insets.top + t.space[2],
           },
           t.elevation.sheet,
@@ -75,7 +77,7 @@ export function NavDrawer({ open, onClose, header, children }: { open: boolean; 
   );
 }
 
-/** One entry: a pill that fills with the accent tint when it is the current view. */
+/** One entry. The current view gets a leaf-green bar on its leading edge and a faint leaf wash. */
 export function DrawerItem({
   icon: Icon,
   label,
@@ -96,20 +98,22 @@ export function DrawerItem({
       aria-label={label}
       aria-current={selected ? 'page' : undefined}
       onPress={onPress}
+      android_ripple={ripple(t)}
       style={(s: PState) => [
         styles.item,
-        { borderRadius: t.radius.pill, marginHorizontal: t.space[3], paddingHorizontal: t.space[4] },
-        selected && { backgroundColor: withAlpha(t.color.accent, t.mode === 'dark' ? 0.24 : 0.14) },
-        !selected && (s.pressed || s.hovered) && { backgroundColor: withAlpha(t.color.text, 0.06) },
-        focusRing(t, s, t.radius.pill),
+        { borderRadius: t.radius.sm, marginHorizontal: t.space[3], paddingHorizontal: t.space[3] },
+        selected && { backgroundColor: withAlpha(t.color.accent, t.mode === 'dark' ? 0.16 : 0.1) },
+        !selected && (s.pressed || s.hovered) && { backgroundColor: pressWash(t) },
+        focusRing(t, s, t.radius.sm),
       ]}
     >
-      <Icon size={22} color={selected ? t.color.accent : t.color.textMuted} />
-      <AppText weight={selected ? '700' : '500'} numberOfLines={1} style={{ flex: 1, color: selected ? t.color.accent : t.color.text }}>
+      {selected ? <View style={[styles.bar, { backgroundColor: t.color.accent }]} /> : null}
+      <Icon size={20} color={selected ? t.color.accent : t.color.textMuted} strokeWidth={1.75} />
+      <AppText weight={selected ? '600' : '400'} numberOfLines={1} style={{ flex: 1, color: selected ? t.color.accent : t.color.text }}>
         {label}
       </AppText>
       {trailing ? (
-        <AppText variant="xs" tone="muted">
+        <AppText variant="xs" tone="muted" style={{ fontVariant: ['tabular-nums'] }}>
           {trailing}
         </AppText>
       ) : null}
@@ -122,7 +126,7 @@ export function DrawerHeading({ label, action }: { label: string; action?: { lab
   const t = useTheme();
   return (
     <View style={[styles.heading, { paddingLeft: t.space[6], paddingRight: t.space[3], marginTop: t.space[2] }]}>
-      <AppText variant="xs" weight="700" tone="muted" role="heading" style={{ flex: 1, textTransform: 'uppercase', letterSpacing: 0.8 }}>
+      <AppText variant="sm" weight="600" tone="muted" role="heading" style={{ flex: 1 }}>
         {label}
       </AppText>
       {action ? (
@@ -132,9 +136,9 @@ export function DrawerHeading({ label, action }: { label: string; action?: { lab
           onPress={action.onPress}
           hitSlop={8}
           style={(s: PState) => [
-            { paddingHorizontal: t.space[3], minHeight: 36, justifyContent: 'center', borderRadius: t.radius.pill },
-            (s.pressed || s.hovered) && { backgroundColor: withAlpha(t.color.text, 0.06) },
-            focusRing(t, s, t.radius.pill),
+            { paddingHorizontal: t.space[3], minHeight: 36, justifyContent: 'center', borderRadius: t.radius.sm },
+            (s.pressed || s.hovered) && { backgroundColor: pressWash(t) },
+            focusRing(t, s, t.radius.sm),
           ]}
         >
           <AppText variant="sm" weight="600" tone="accent">
@@ -153,6 +157,7 @@ export function DrawerDivider() {
 
 const styles = StyleSheet.create({
   panel: { position: 'absolute', left: 0, top: 0, bottom: 0 },
-  item: { flexDirection: 'row', alignItems: 'center', gap: 16, minHeight: 48 },
+  item: { flexDirection: 'row', alignItems: 'center', gap: 16, minHeight: 48, overflow: 'hidden' },
+  bar: { position: 'absolute', left: 0, top: 10, bottom: 10, width: 3, borderRadius: 2 },
   heading: { flexDirection: 'row', alignItems: 'center', minHeight: 40 },
 });

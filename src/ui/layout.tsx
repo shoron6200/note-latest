@@ -15,8 +15,11 @@ export function TopBar({
   actions,
   scrolled,
   bg,
+  serif,
 }: {
   title?: string;
+  /** The title is the user's own words (a folder or label name): set it in the serif. */
+  serif?: boolean;
   onBack?: () => void;
   actions?: ReactNode;
   scrolled?: boolean;
@@ -38,7 +41,7 @@ export function TopBar({
       ]}
     >
       {onBack && <IconButton icon={ArrowLeft} label="Back" onPress={onBack} />}
-      <AppText variant="xl" role="heading" numberOfLines={1} style={{ flex: 1 }}>
+      <AppText variant={serif ? 'screen' : 'xl'} role="heading" numberOfLines={1} style={{ flex: 1, marginLeft: onBack ? t.space[1] : 0 }}>
         {title ?? ''}
       </AppText>
       <View style={styles.actions}>{actions}</View>
@@ -48,6 +51,11 @@ export function TopBar({
 
 // ---------------------------------------------------------------- EmptyState
 
+/**
+ * An empty page, not an illustration: three faint ruled lines with the
+ * margin rule, a serif line saying what is (not) here, and one plain line
+ * saying what to do. The icon is kept for screen-specific meaning, small.
+ */
 export function EmptyState({
   icon: Icon,
   title,
@@ -55,29 +63,40 @@ export function EmptyState({
   action,
   compact,
 }: {
-  icon: IconType;
+  icon?: IconType;
   title: string;
   body?: string;
   action?: { label: string; onPress: () => void };
   compact?: boolean;
 }) {
   const t = useTheme();
+  const margin = t.layout.margin;
   return (
-    <View style={styles.empty}>
-      <Icon size={48} color={t.color.textMuted} strokeWidth={1.5} />
-      <AppText variant={compact ? 'lg' : 'display'} role="heading" style={{ textAlign: 'center' }}>
-        {title}
-      </AppText>
-      {body ? (
-        <AppText tone="muted" style={{ textAlign: 'center' }}>
-          {body}
+    <View style={[styles.empty, { paddingVertical: compact ? t.space[6] : t.space[8] }]}>
+      <View aria-hidden style={[styles.emptyRule, { left: margin, backgroundColor: t.color.border }]} />
+      {[0, 1, 2].map((i) => (
+        <View key={i} aria-hidden style={{ height: t.space[5], borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: withAlpha(t.color.border, 0.7) }} />
+      ))}
+      <View style={{ paddingLeft: margin + t.space[4], paddingTop: t.space[5], gap: t.space[2] }}>
+        {Icon ? (
+          <View aria-hidden style={{ position: 'absolute', left: (margin - 18) / 2, top: t.space[5] + 8 }}>
+            <Icon size={18} color={t.color.textMuted} strokeWidth={1.75} />
+          </View>
+        ) : null}
+        <AppText variant={compact ? 'entry' : 'page'} role="heading">
+          {title}
         </AppText>
-      ) : null}
-      {action ? (
-        <View style={{ marginTop: t.space[2] }}>
-          <Button label={action.label} onPress={action.onPress} />
-        </View>
-      ) : null}
+        {body ? (
+          <AppText variant="body" tone="muted" style={{ maxWidth: 360 }}>
+            {body}
+          </AppText>
+        ) : null}
+        {action ? (
+          <View style={{ marginTop: t.space[2] }}>
+            <Button label={action.label} variant="secondary" onPress={action.onPress} />
+          </View>
+        ) : null}
+      </View>
     </View>
   );
 }
@@ -98,7 +117,7 @@ export function Banner({
   return (
     <View
       role="alert"
-      style={[styles.banner, { backgroundColor: withAlpha(fg, 0.12), borderRadius: t.radius.md, padding: t.space[3] }]}
+      style={[styles.banner, { backgroundColor: withAlpha(fg, 0.1), borderRadius: t.radius.sm, padding: t.space[3] }]}
     >
       <AlertTriangle size={20} color={fg} />
       <View style={{ flex: 1, gap: 4 }}>
@@ -118,6 +137,7 @@ export function Banner({
 const styles = StyleSheet.create({
   bar: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   actions: { flexDirection: 'row', alignItems: 'center' },
-  empty: { alignItems: 'center', gap: 12, maxWidth: 320, alignSelf: 'center', paddingVertical: 48 },
-  banner: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
+  empty: { width: '100%', maxWidth: 560 },
+  emptyRule: { position: 'absolute', top: 0, bottom: 0, width: 2 },
+  banner: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
 });

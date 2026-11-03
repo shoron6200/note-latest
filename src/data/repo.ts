@@ -1127,7 +1127,7 @@ export function createRepo(deps: RepoDeps) {
   // ------------------------------------------------------------ settings
 
   const DEFAULTS: Settings = {
-    viewMode: 'grid',
+    viewMode: 'list',
     sort: 'updated',
     theme: 'system',
     lastBackupAt: null,
