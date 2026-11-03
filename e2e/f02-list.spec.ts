@@ -17,7 +17,7 @@ test.describe('F02 make a list and tick it off', () => {
     await page.getByRole('checkbox', { name: 'Milk' }).click();
     await expect(page.getByText('Done (1)')).toBeVisible();
     await back(page);
-    await expect(button(page, /^Shopping Eggs Milk/)).toBeVisible(); // open items first, ticked after
+    await expect(button(page, /^Shopping Eggs, Milk/)).toBeVisible(); // open items first, ticked after (the index runs them on as one line)
   });
 
   test('F02-E1/E2 Enter adds below and focuses, Backspace on empty removes', async ({ page }) => {

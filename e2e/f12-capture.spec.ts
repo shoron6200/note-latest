@@ -114,9 +114,9 @@ test.describe('F14 voice notes (the web preview keeps the sound; text needs a ph
     await expect(button(page, 'Play: Voice note')).toHaveCount(0);
   });
 
-  test('F14-H2 Voice from the + button opens the recorder; the Voice notes filter finds it', async ({ page }) => {
+  test('F14-H2 Voice from the Write menu opens the recorder; the Voice notes filter finds it', async ({ page }) => {
     await openApp(page);
-    await button(page, 'New').click();
+    await button(page, 'More ways to start').click();
     await button(page, 'Voice').click();
     await expect(button(page, 'Start recording')).toBeVisible({ timeout: 10_000 });
     await button(page, 'Start recording').click();

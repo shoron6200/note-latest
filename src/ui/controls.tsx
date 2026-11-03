@@ -6,7 +6,7 @@ import { copy } from '@/copy';
 import { noteFontStyle, NOTE_FONT_LABELS } from '@/theme/fonts';
 import { useTheme, withAlpha, type NoteColor, type NoteFont, type Theme } from '@/theme/theme';
 
-import { AppText, focusRing, type PState } from './Text';
+import { AppText, focusRing, type PState, stateWash } from './Text';
 
 export type IconType = ComponentType<{ size?: number; color?: string; strokeWidth?: number; fill?: string }>;
 
@@ -56,7 +56,7 @@ export function IconButton({
       style={(s: PState) => [
         styles.iconButton,
         variant === 'filled' && { backgroundColor: t.color.accent, borderRadius: t.radius.sm },
-        (s.pressed || s.hovered) && variant !== 'filled' && { backgroundColor: pressWash(t) },
+        variant !== 'filled' && stateWash(t, s),
         disabled && { opacity: 0.4 },
         focusRing(t, s, t.radius.pill),
       ]}
@@ -115,8 +115,8 @@ export function Button({
         },
         l.border ? { borderWidth: 1, borderColor: l.border } : null,
         // Filled buttons dim slightly; quiet and outlined ones get the ink wash.
-        (s.pressed || s.hovered) && l.bg ? { opacity: 0.88 } : null,
-        (s.pressed || s.hovered) && !l.bg && { backgroundColor: pressWash(t) },
+        l.bg && s.pressed ? { opacity: 0.82 } : l.bg && s.hovered ? { opacity: 0.92 } : null,
+        !l.bg && stateWash(t, s),
         disabled && { opacity: 0.4 },
         focusRing(t, s, t.radius.sm),
       ]}
@@ -163,7 +163,7 @@ export function Fab({
         style={(s: PState) => [
           styles.writeMain,
           { paddingHorizontal: compact ? 0 : t.space[4], width: compact ? h : undefined, borderRadius: t.radius.sm },
-          (s.pressed || s.hovered) && { backgroundColor: withAlpha(t.color.onAccent, 0.12) },
+          (s.pressed || s.hovered) && { backgroundColor: withAlpha(t.color.onAccent, s.pressed ? 0.2 : 0.1) },
           focusRing(t, s, t.radius.sm),
         ]}
       >
@@ -186,7 +186,7 @@ export function Fab({
             style={(s: PState) => [
               styles.writeMore,
               { borderRadius: t.radius.sm },
-              (s.pressed || s.hovered) && { backgroundColor: withAlpha(t.color.onAccent, 0.12) },
+              (s.pressed || s.hovered) && { backgroundColor: withAlpha(t.color.onAccent, s.pressed ? 0.2 : 0.1) },
               focusRing(t, s, t.radius.sm),
             ]}
           >
@@ -227,7 +227,7 @@ export function FolderChip({
           borderColor: selected ? t.color.accent : t.color.border,
           backgroundColor: selected ? withAlpha(t.color.accent, t.mode === 'dark' ? 0.18 : 0.1) : 'transparent',
         },
-        !selected && (s.pressed || s.hovered) && { backgroundColor: pressWash(t) },
+        !selected && stateWash(t, s),
         focusRing(t, s, t.radius.sm),
       ]}
     >
@@ -329,7 +329,7 @@ export function FontOption({
       style={(s: PState) => [
         styles.row,
         { borderRadius: t.radius.sm, paddingHorizontal: t.space[3] },
-        (s.pressed || s.hovered) && { backgroundColor: pressWash(t) },
+        stateWash(t, s),
         focusRing(t, s, t.radius.sm),
       ]}
     >
@@ -375,7 +375,7 @@ export function Segmented<T extends string>({
               styles.segment,
               { borderRadius: t.radius.sm - 2 },
               on && { backgroundColor: t.color.surfaceRaised, borderWidth: StyleSheet.hairlineWidth, borderColor: t.color.border },
-              !on && (s.pressed || s.hovered) && { backgroundColor: pressWash(t) },
+              !on && stateWash(t, s),
               focusRing(t, s, t.radius.sm),
             ]}
           >
@@ -426,7 +426,7 @@ export function Tag({
       style={(s: PState) => [
         styles.tag,
         { borderRadius: t.radius.xs, marginHorizontal: -4, paddingHorizontal: 4 },
-        (s.pressed || s.hovered) && { backgroundColor: pressWash(t) },
+        stateWash(t, s),
         focusRing(t, s, t.radius.xs),
       ]}
     >
@@ -492,7 +492,7 @@ export function SettingsRow({
       style={(s: PState) => [
         styles.row,
         { paddingHorizontal: t.space[4], gap: t.space[4] },
-        (s.pressed || s.hovered) && { backgroundColor: pressWash(t) },
+        stateWash(t, s),
         disabled && { opacity: 0.4 },
         focusRing(t, s, 0),
       ]}

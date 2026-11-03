@@ -4,15 +4,15 @@
  * entry closes it.
  */
 import { useEffect, useState, type ReactNode } from 'react';
-import { Animated, BackHandler, Easing, Modal, Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { Animated, BackHandler, Modal, Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { copy } from '@/copy';
 import { useTheme, withAlpha } from '@/theme/theme';
 
-import { pressWash, ripple, type IconType } from './controls';
-import { useReducedMotion } from './motion';
-import { AppText, focusRing, type PState } from './Text';
+import { ripple, type IconType } from './controls';
+import { EASE_IN, EASE_OUT, useReducedMotion } from './motion';
+import { AppText, focusRing, type PState, stateWash } from './Text';
 
 
 export function NavDrawer({ open, onClose, header, children }: { open: boolean; onClose: () => void; header?: ReactNode; children: ReactNode }) {
@@ -30,13 +30,13 @@ export function NavDrawer({ open, onClose, header, children }: { open: boolean; 
   useEffect(() => {
     Animated.timing(x, {
       toValue: open ? 0 : -width,
-      duration: reduced ? 0 : open ? t.motion.base : t.motion.fast,
-      easing: open ? Easing.out(Easing.cubic) : Easing.in(Easing.cubic),
+      duration: reduced ? t.motion.reduced : open ? t.motion.base : t.motion.fast,
+      easing: open ? EASE_OUT : EASE_IN,
       useNativeDriver: true,
     }).start(({ finished }) => {
       if (finished && !open) setMounted(false);
     });
-  }, [open, width, x, reduced, t.motion.base, t.motion.fast]);
+  }, [open, width, x, reduced, t.motion.base, t.motion.fast, t.motion.reduced]);
 
   useEffect(() => {
     if (!open) return;
@@ -61,7 +61,9 @@ export function NavDrawer({ open, onClose, header, children }: { open: boolean; 
           styles.panel,
           {
             width,
-            transform: [{ translateX: x }],
+            // Reduce Motion: the panel fades in place instead of sliding.
+            transform: reduced ? [] : [{ translateX: x }],
+            opacity: reduced ? scrim : 1,
             backgroundColor: t.color.surfaceRaised,
             borderTopRightRadius: t.radius.md,
             borderBottomRightRadius: t.radius.md,
@@ -103,7 +105,7 @@ export function DrawerItem({
         styles.item,
         { borderRadius: t.radius.sm, marginHorizontal: t.space[3], paddingHorizontal: t.space[3] },
         selected && { backgroundColor: withAlpha(t.color.accent, t.mode === 'dark' ? 0.16 : 0.1) },
-        !selected && (s.pressed || s.hovered) && { backgroundColor: pressWash(t) },
+        !selected && stateWash(t, s),
         focusRing(t, s, t.radius.sm),
       ]}
     >
@@ -137,7 +139,7 @@ export function DrawerHeading({ label, action }: { label: string; action?: { lab
           hitSlop={8}
           style={(s: PState) => [
             { paddingHorizontal: t.space[3], minHeight: 36, justifyContent: 'center', borderRadius: t.radius.sm },
-            (s.pressed || s.hovered) && { backgroundColor: pressWash(t) },
+            stateWash(t, s),
             focusRing(t, s, t.radius.sm),
           ]}
         >

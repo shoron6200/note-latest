@@ -1,6 +1,8 @@
 import { Text as RNText, type TextProps, type TextStyle, type ViewStyle } from 'react-native';
 
-import { useTheme, type Theme, type TypeName } from '@/theme/theme';
+import { useTheme, withAlpha, type Theme, type TypeName } from '@/theme/theme';
+
+import { focusFromKeyboard } from './motion';
 
 type Variant = TypeName;
 type Tone = 'text' | 'muted' | 'accent' | 'danger' | 'success' | 'warning' | 'onAccent';
@@ -44,9 +46,12 @@ export function AppText({ variant = 'base', tone = 'text', weight, style, ...res
 /** Pressable state, including the web-only `hovered` / `focused` flags react-native-web passes. */
 export type PState = { pressed: boolean; hovered?: boolean; focused?: boolean };
 
-/** The 2px focus ring every pressable shows while focused (keyboard, switch control, web). */
+/**
+ * The 2px focus ring every pressable shows while focused from a keyboard,
+ * switch control or remote (on the web, not after a mouse click).
+ */
 export function focusRing(theme: Theme, state: PState, radius: number): ViewStyle | null {
-  if (!state.focused) return null;
+  if (!state.focused || !focusFromKeyboard()) return null;
   return {
     outlineColor: theme.color.focus,
     outlineWidth: 2,
@@ -54,4 +59,14 @@ export function focusRing(theme: Theme, state: PState, radius: number): ViewStyl
     outlineOffset: 2,
     borderRadius: radius,
   } as ViewStyle;
+}
+
+/**
+ * The ink wash under a pressable: a faint one on hover (pointer devices), a
+ * firmer one while pressed, so hovering and pressing read as two states.
+ */
+export function stateWash(theme: Theme, state: PState): ViewStyle | null {
+  if (state.pressed) return { backgroundColor: withAlpha(theme.color.text, 0.1) };
+  if (state.hovered) return { backgroundColor: withAlpha(theme.color.text, 0.05) };
+  return null;
 }

@@ -15,7 +15,7 @@ import {
 import { noteFontStyle } from '@/theme/fonts';
 import { useTheme, withAlpha, type NoteFont, type NoteSize } from '@/theme/theme';
 
-import { AppText, focusRing, type PState } from './Text';
+import { AppText, focusRing, type PState, stateWash } from './Text';
 
 // ---------------------------------------------------------------- TextField
 
@@ -256,7 +256,7 @@ export const ChecklistRow = forwardRef(function ChecklistRow(
         onPress={onRemove}
         style={(s: PState) => [
           styles.boxTarget,
-          (s.pressed || s.hovered) && { backgroundColor: withAlpha(t.color.text, 0.08), borderRadius: t.radius.pill },
+          [stateWash(t, s), { borderRadius: t.radius.pill }],
           focusRing(t, s, t.radius.pill),
         ]}
       >

@@ -10,9 +10,10 @@ import { Animated, PanResponder, Platform, Pressable, View, type TextInputInstan
 import { copy } from '@/copy';
 import { useRepo } from '@/data/DataProvider';
 import type { Item } from '@/data/types';
-import { useTheme, withAlpha, type NoteFont, type NoteSize } from '@/theme/theme';
+import { useTheme, type NoteFont, type NoteSize } from '@/theme/theme';
 import { ChecklistRow } from '@/ui/fields';
-import { AppText, focusRing, type PState } from '@/ui/Text';
+import { easeNextLayout, useReducedMotion } from '@/ui/motion';
+import { AppText, focusRing, type PState, stateWash } from '@/ui/Text';
 
 type Props = {
   noteId: string;
@@ -28,6 +29,7 @@ type Props = {
 
 export function ChecklistEditor({ noteId, items, font, size, editable, onDragging, registerFlush }: Props) {
   const t = useTheme();
+  const reduced = useReducedMotion();
   const repo = useRepo();
   const [focusId, setFocusId] = useState<string | null>(null);
   const [showDone, setShowDone] = useState(true);
@@ -147,6 +149,8 @@ export function ChecklistEditor({ noteId, items, font, size, editable, onDraggin
                   onText={(s) => setText(id, s)}
                   onToggle={async () => {
                     await flush();
+                    // The ticked item eases down into "Done" instead of jumping there.
+                    easeNextLayout(reduced);
                     await repo.toggleItem(id);
                   }}
                   onSubmit={() => addAfter(id)}
@@ -168,7 +172,7 @@ export function ChecklistEditor({ noteId, items, font, size, editable, onDraggin
           onPress={() => addAfter(order[order.length - 1])}
           style={(s: PState) => [
             { flexDirection: 'row', alignItems: 'center', gap: t.space[3], minHeight: 48, paddingLeft: t.space[2] + 2, borderRadius: t.radius.sm },
-            (s.pressed || s.hovered) && { backgroundColor: withAlpha(t.color.text, 0.05) },
+            stateWash(t, s),
             focusRing(t, s, t.radius.sm),
           ]}
         >
@@ -183,9 +187,13 @@ export function ChecklistEditor({ noteId, items, font, size, editable, onDraggin
             role="button"
             aria-expanded={showDone}
             aria-label={copy.editor.done(done.length)}
-            onPress={() => setShowDone(!showDone)}
+            onPress={() => {
+              easeNextLayout(reduced, t.motion.base);
+              setShowDone(!showDone);
+            }}
             style={(s: PState) => [
-              { flexDirection: 'row', alignItems: 'center', gap: t.space[2], minHeight: 44, paddingLeft: t.space[2] },
+              { flexDirection: 'row', alignItems: 'center', gap: t.space[2], minHeight: 48, paddingLeft: t.space[2], borderRadius: t.radius.sm },
+              stateWash(t, s),
               focusRing(t, s, t.radius.sm),
             ]}
           >
@@ -208,6 +216,7 @@ export function ChecklistEditor({ noteId, items, font, size, editable, onDraggin
                 onText={(s) => setText(it.id, s)}
                 onToggle={async () => {
                   await flush();
+                  easeNextLayout(reduced);
                   await repo.toggleItem(it.id);
                 }}
                 onRemove={() => remove(it.id, false)}

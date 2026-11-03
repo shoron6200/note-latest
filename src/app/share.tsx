@@ -20,7 +20,7 @@ import { Button } from '@/ui/controls';
 import { TextField } from '@/ui/fields';
 import { EmptyState, TopBar } from '@/ui/layout';
 import { useSnackbar } from '@/ui/snackbar';
-import { AppText, focusRing, type PState } from '@/ui/Text';
+import { AppText, focusRing, type PState, stateWash } from '@/ui/Text';
 
 const leave = () => (router.canGoBack() ? router.back() : router.replace('/'));
 
@@ -162,7 +162,7 @@ function ShareForm({ share, clear }: { share: Incoming; clear: () => void }) {
                           borderColor: on ? t.color.accent : t.color.border,
                           backgroundColor: on ? withAlpha(t.color.accent, 0.14) : 'transparent',
                         },
-                        (s.pressed || s.hovered) && !on && { backgroundColor: withAlpha(t.color.text, 0.06) },
+                        !on && stateWash(t, s),
                         focusRing(t, s, t.radius.sm),
                       ]}
                     >

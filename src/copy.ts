@@ -25,7 +25,7 @@ export const copy = {
   newItem: {
     fabLabel: 'Write',
     more: 'More ways to start',
-    moreTitle: 'Start a…',
+    moreTitle: 'New',
     text: 'Note',
     textHint: 'Write it down',
     checklist: 'List',

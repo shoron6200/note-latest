@@ -17,7 +17,7 @@ import { gridColumns, NOTE_COLORS, useTheme, withAlpha, type NoteColor } from '@
 import { IconButton, NOTE_COLOR_LABELS, type IconType } from '@/ui/controls';
 import { EmptyState } from '@/ui/layout';
 import { GridSkeleton, NoteSections, sectionsFor } from '@/ui/NoteGrid';
-import { AppText, focusRing, type PState } from '@/ui/Text';
+import { AppText, focusRing, type PState, stateWash } from '@/ui/Text';
 
 export default function SearchScreen() {
   const t = useTheme();
@@ -87,12 +87,14 @@ export default function SearchScreen() {
         <View style={{ width: contentWidth, gap: t.space[3], paddingTop: t.space[3] }}>
           {!searching ? (
             <Filters labels={labels} onPick={setFilter} />
-          ) : !results.data || typing ? (
+          ) : !results.data || (typing && list.length === 0) ? (
             <GridSkeleton columns={columns} />
           ) : list.length === 0 ? (
             <EmptyState compact icon={SearchX} title={copy.search.noneTitle} body={query ? copy.search.noneBody(query) : undefined} />
           ) : (
-            <>
+            // While the next query is on its way, the last results stay in place, dimmed:
+            // nothing jumps to a skeleton and back on every keystroke.
+            <View style={{ gap: t.space[3], opacity: typing ? 0.5 : 1 }} aria-busy={typing}>
               <AppText variant="sm" tone="muted" aria-live="polite">
                 {copy.search.results(list.length)}
               </AppText>
@@ -104,7 +106,7 @@ export default function SearchScreen() {
                 onOpen={(n) => (sel.active ? sel.toggle(n.id) : router.push({ pathname: '/note/[id]', params: { id: n.id } }))}
                 onLongPress={(n) => sel.toggle(n.id)}
               />
-            </>
+            </View>
           )}
         </View>
       </ScrollView>
@@ -140,7 +142,7 @@ function Tile({ icon: Icon, label, onPress }: { icon: IconType; label: string; o
       style={(s: PState) => [
         styles.tile,
         { paddingHorizontal: t.space[4], borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: t.color.border },
-        (s.pressed || s.hovered) && { backgroundColor: withAlpha(t.color.text, 0.06) },
+        stateWash(t, s),
         focusRing(t, s, 0),
       ]}
     >

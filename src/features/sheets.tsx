@@ -19,12 +19,12 @@ import { Pressable, ScrollView, Share, StyleSheet, View } from 'react-native';
 import { copy } from '@/copy';
 import { useQuery, useRepo } from '@/data/DataProvider';
 import { DuplicateFolderError, type NoteType } from '@/data/types';
-import { useTheme, withAlpha } from '@/theme/theme';
+import { useTheme } from '@/theme/theme';
 import type { IconType } from '@/ui/controls';
 import { TextField } from '@/ui/fields';
 import { BottomSheet, Dialog } from '@/ui/overlays';
 import { useSnackbar } from '@/ui/snackbar';
-import { AppText, focusRing, type PState } from '@/ui/Text';
+import { AppText, focusRing, type PState, stateWash } from '@/ui/Text';
 
 // ---------------------------------------------------------------- a sheet row
 
@@ -54,7 +54,7 @@ export function SheetRow({
       style={(s: PState) => [
         styles.row,
         { paddingHorizontal: t.space[3], borderRadius: t.radius.sm, gap: t.space[3] },
-        (s.pressed || s.hovered) && { backgroundColor: withAlpha(t.color.text, 0.06) },
+        stateWash(t, s),
         focusRing(t, s, t.radius.sm),
       ]}
     >

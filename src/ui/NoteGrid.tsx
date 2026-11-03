@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { copy } from '@/copy';
@@ -142,13 +143,49 @@ export function NoteSections({ sections, ...grid }: Omit<GridProps, 'notes'> & {
   );
 }
 
-/** Loading placeholders in the shape of the grid (no spinner). */
+/**
+ * Loading placeholders in the shape of what is coming: index entries (a
+ * margin rule, a title bar, a line of text) or grid leaves. No spinner and no
+ * shimmer loop; they appear only if loading takes longer than a blink, so a
+ * fast open never flashes grey boxes.
+ */
 export function GridSkeleton({ columns }: { columns: number }) {
   const t = useTheme();
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const id = setTimeout(() => setVisible(true), 200);
+    return () => clearTimeout(id);
+  }, []);
   const gap = t.layout['grid-gap'];
+  const bar = { backgroundColor: t.color.surface, borderRadius: t.radius.xs };
+  const a11y = { role: 'progressbar' as const, 'aria-busy': true, 'aria-label': 'Loading notes' };
+  if (!visible) return <View {...a11y} style={{ minHeight: 120 }} />;
+  if (columns <= 1) {
+    return (
+      <View {...a11y} style={[styles.sheet, { backgroundColor: t.color.surfaceRaised, borderRadius: t.radius.md, borderColor: t.color.border }]}>
+        {[0.55, 0.4, 0.62, 0.48].map((w, i) => (
+          <View
+            key={i}
+            style={{
+              paddingVertical: t.space[4],
+              paddingLeft: t.layout.margin + t.layout['rule-width'] + t.space[3],
+              paddingRight: t.space[4],
+              gap: t.space[2],
+              borderTopWidth: i ? StyleSheet.hairlineWidth : 0,
+              borderTopColor: t.color.border,
+            }}
+          >
+            <View style={[styles.skelRule, { left: t.layout.margin, backgroundColor: t.color.border }]} />
+            <View style={[bar, { height: 16, width: `${w * 100}%` }]} />
+            <View style={[bar, { height: 12, width: '85%' }]} />
+          </View>
+        ))}
+      </View>
+    );
+  }
   const heights = [120, 180, 96, 150, 110, 170];
   return (
-    <View style={{ flexDirection: 'row', gap }} role="progressbar" aria-busy aria-label="Loading notes">
+    <View style={{ flexDirection: 'row', gap }} {...a11y}>
       {Array.from({ length: columns }, (_, c) => (
         <View key={c} style={{ flex: 1, gap }}>
           {heights
@@ -164,4 +201,5 @@ export function GridSkeleton({ columns }: { columns: number }) {
 
 const styles = StyleSheet.create({
   sheet: { overflow: 'hidden', borderWidth: StyleSheet.hairlineWidth },
+  skelRule: { position: 'absolute', top: 0, bottom: 0, width: 2 },
 });

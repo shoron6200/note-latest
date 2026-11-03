@@ -6,16 +6,16 @@
  */
 import { Bell, Check, Folder, Image as ImageIcon, Mic, Pin, Repeat } from 'lucide-react-native';
 import type { ReactNode } from 'react';
-import { Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { Platform, Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
 
 import { copy } from '@/copy';
 import type { VisualKind } from '@/data/types';
 import { noteFontStyle } from '@/theme/fonts';
 import { isWide, useTheme, withAlpha, type NoteColor, type NoteFont, type Theme } from '@/theme/theme';
 
-import { pressWash, ripple, Tag } from './controls';
+import { ripple, Tag } from './controls';
 import { CardCover } from './media';
-import { AppText, focusRing, type PState } from './Text';
+import { AppText, focusRing, type PState, stateWash } from './Text';
 
 /** The shape listNotes() returns for one card (see replica/architecture.md). */
 export type NoteCardData = {
@@ -129,7 +129,7 @@ export function NoteCard({
       : items.length > 0 && (
           // The list view reads like an index: the items run on as one line.
           <AppText variant="body" numberOfLines={2} style={[{ color: withAlpha(t.color.text, 0.82) }, noteFontStyle(note.font)]}>
-            {items.filter((i) => !i.checked).map((i) => i.text).join(', ') || items.map((i) => i.text).join(', ')}
+            {items.map((i) => i.text).join(', ')}
             {more > 0 ? '…' : ''}
           </AppText>
         )
@@ -162,7 +162,7 @@ export function NoteCard({
       ) : null}
       {progress ? <Tag label={progress} /> : null}
       {note.voiceCount ? <Tag icon={Mic} label={note.voiceCount > 1 ? copy.voice.count(note.voiceCount) : copy.voice.title} /> : null}
-      {note.mediaCount && (!grid || !note.cover) ? <Tag icon={ImageIcon} label={String(note.mediaCount)} /> : null}
+      {note.mediaCount && !note.cover ? <Tag icon={ImageIcon} label={String(note.mediaCount)} /> : null}
       {note.folder ? <Tag icon={Folder} label={note.folder} /> : null}
       {labels.slice(0, CARD_LABELS).map((l) => (
         <LabelChip key={l} label={l} />
@@ -189,7 +189,7 @@ export function NoteCard({
     grid
       ? [styles.leaf, { backgroundColor: wash, borderRadius: t.radius.md, borderColor: selected ? t.color.accent : t.color.border }]
       : { backgroundColor: wash },
-    (s.pressed || s.hovered) && { backgroundColor: blend(wash, pressWash(t)) },
+    (s.pressed || s.hovered) && { backgroundColor: blend(wash, withAlpha(t.color.text, s.pressed ? 0.08 : 0.04)) },
     focusRing(t, s, grid ? t.radius.md : 0),
   ];
 
@@ -207,16 +207,15 @@ export function NoteCard({
       aria-pressed={picking ? selected : undefined}
       onPress={onPress}
       onLongPress={onLongPress}
+      // A short delay before the pressed wash, so starting a scroll over a
+      // card doesn't flash it. Still well inside the 100 ms feedback window.
+      unstable_pressDelay={Platform.OS === 'web' ? 0 : 64}
       android_ripple={ripple(t)}
       style={pressStyle}
     >
       {grid ? (
         <View>
-          {note.cover && (
-            <View style={{ paddingLeft: 0 }}>
-              <CardCover kind={note.cover.kind} fileName={note.cover.fileName} count={note.mediaCount ?? 1} />
-            </View>
-          )}
+          {note.cover && <CardCover kind={note.cover.kind} fileName={note.cover.fileName} count={note.mediaCount ?? 1} />}
           <View style={{ paddingTop: t.space[4], paddingBottom: t.space[4], paddingLeft: textInset, paddingRight: t.space[3], gap: t.space[2] }}>
             {rule}
             {/* Pinned leaves sit under "Pinned"; the corner is kept for the selection box. */}
@@ -240,6 +239,11 @@ export function NoteCard({
             <View style={[styles.content, { paddingLeft: t.layout['rule-width'] + t.space[3] }]}>
               {title ?? (empty ? <AppText variant="body" tone="muted">Empty note</AppText> : textPreview ?? listPreview)}
             </View>
+            {note.cover ? (
+              <View style={{ marginLeft: t.space[3] }}>
+                <CardCover variant="thumb" kind={note.cover.kind} fileName={note.cover.fileName} count={note.mediaCount ?? 1} />
+              </View>
+            ) : null}
           </View>
           {title && (textPreview || listPreview) ? (
             <View style={styles.line}>
@@ -263,12 +267,14 @@ export function NoteCard({
 export function LabelChip({ label, onPress }: { label: string; onPress?: () => void }) {
   const t = useTheme();
   const body = (
-    <AppText variant="sm" weight="500" numberOfLines={1} style={{ color: t.color.textMuted, maxWidth: 160 }}>
-      <AppText variant="sm" weight="500" style={{ color: withAlpha(t.color.textMuted, 0.7) }}>
+    <View style={styles.labelRow}>
+      <AppText variant="sm" weight="500" aria-hidden style={{ color: withAlpha(t.color.textMuted, 0.7) }}>
         #
       </AppText>
-      {label}
-    </AppText>
+      <AppText variant="sm" weight="500" numberOfLines={1} style={{ color: t.color.textMuted, maxWidth: 160 }}>
+        {label}
+      </AppText>
+    </View>
   );
   if (!onPress) return <View style={styles.label}>{body}</View>;
   return (
@@ -280,7 +286,7 @@ export function LabelChip({ label, onPress }: { label: string; onPress?: () => v
       style={(s: PState) => [
         styles.label,
         { borderRadius: t.radius.xs, paddingHorizontal: 4, marginHorizontal: -4 },
-        (s.pressed || s.hovered) && { backgroundColor: pressWash(t) },
+        stateWash(t, s),
         focusRing(t, s, t.radius.xs),
       ]}
     >
@@ -309,4 +315,5 @@ const styles = StyleSheet.create({
   miniBox: { width: 14, height: 14, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center' },
   footer: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: 12, rowGap: 4, marginTop: 2 },
   label: { minHeight: 20, justifyContent: 'center', alignSelf: 'flex-start' },
+  labelRow: { flexDirection: 'row', alignItems: 'center' },
 });

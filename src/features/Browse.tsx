@@ -47,6 +47,7 @@ import { TextField } from '@/ui/fields';
 import { EmptyState } from '@/ui/layout';
 import { GridSkeleton, NoteSections, sectionsFor } from '@/ui/NoteGrid';
 import { BottomSheet, Dialog } from '@/ui/overlays';
+import { easeNextLayout, useReducedMotion } from '@/ui/motion';
 import { useSnackbar } from '@/ui/snackbar';
 import { AppText } from '@/ui/Text';
 
@@ -67,6 +68,7 @@ export function Browse({ fixed }: { fixed?: BrowseView }) {
   const [dialog, setDialog] = useState<'rename' | 'deleteLabel' | 'emptyTrash' | null>(null);
   const [scrolled, setScrolled] = useState(false);
   const sel = useSelection();
+  const reduced = useReducedMotion();
 
   const labels = useQuery((r) => r.listLabels(), []).data;
   const folders = useQuery((r) => r.listFolders(), []).data;
@@ -197,7 +199,11 @@ export function Browse({ fixed }: { fixed?: BrowseView }) {
           setScrolled(y > 4);
           // The Write button folds to its pen while reading down, and opens again on the way up.
           if (Math.abs(y - lastY.current) > 8) {
-            setCompact(y > lastY.current && y > 48);
+            const next = y > lastY.current && y > 48;
+            if (next !== compact) {
+              easeNextLayout(reduced);
+              setCompact(next);
+            }
             lastY.current = y;
           }
         }}

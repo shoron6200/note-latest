@@ -37,7 +37,7 @@ import { LabelPicker, labelErrorText } from '@/features/labels';
 import { NoteActionsSheet, SheetRow } from '@/features/sheets';
 import { discardTempRecording, VoiceSheet, type Recording } from '@/features/voice';
 import { isWide, useTheme, withAlpha } from '@/theme/theme';
-import { Button, IconButton, pressWash, ripple, Tag as Chip, type IconType } from '@/ui/controls';
+import { Button, IconButton, ripple, Tag as Chip, type IconType } from '@/ui/controls';
 import { useReducedMotion } from '@/ui/motion';
 import { TextField } from '@/ui/fields';
 import { editedLabel, reminderChip } from '@/ui/format';
@@ -47,7 +47,7 @@ import { MediaStrip } from '@/ui/media';
 import { LabelChip } from '@/ui/NoteCard';
 import { BottomSheet } from '@/ui/overlays';
 import { useSnackbar } from '@/ui/snackbar';
-import { AppText, focusRing, type PState } from '@/ui/Text';
+import { AppText, focusRing, type PState, stateWash } from '@/ui/Text';
 
 type Sheet = 'colour' | 'font' | 'reminder' | 'attach' | 'add' | 'actions' | 'labels' | 'voice' | null;
 
@@ -516,7 +516,7 @@ function PressRow({ children, onPress, label }: { children: ReactNode; onPress: 
       style={(s: PState) => [
         styles.suggestRow,
         { paddingHorizontal: t.space[4] },
-        (s.pressed || s.hovered) && { backgroundColor: withAlpha(t.color.text, 0.06) },
+        stateWash(t, s),
         focusRing(t, s, 0),
       ]}
     >
@@ -537,7 +537,7 @@ function ToolButton({ icon: Icon, text, label, onPress }: { icon: IconType; text
       style={(s: PState) => [
         styles.tool,
         { borderRadius: t.radius.sm, paddingHorizontal: t.space[3] },
-        (s.pressed || s.hovered) && { backgroundColor: pressWash(t) },
+        stateWash(t, s),
         focusRing(t, s, t.radius.sm),
       ]}
     >
