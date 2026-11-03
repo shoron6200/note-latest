@@ -17,14 +17,13 @@ import {
   MoreVertical,
   Palette,
   Pin,
-  PinOff,
   Plus,
   SquarePlus,
   Tag,
   Type,
 } from 'lucide-react-native';
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
-import { AppState, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Animated, AppState, Easing, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { copy } from '@/copy';
@@ -37,8 +36,9 @@ import { AttachSheet, ColourSheet, FontSheet, ReminderSheet } from '@/features/e
 import { LabelPicker, labelErrorText } from '@/features/labels';
 import { NoteActionsSheet, SheetRow } from '@/features/sheets';
 import { discardTempRecording, VoiceSheet, type Recording } from '@/features/voice';
-import { useTheme, withAlpha } from '@/theme/theme';
-import { Button, IconButton, Tag as Chip } from '@/ui/controls';
+import { isWide, useTheme, withAlpha } from '@/theme/theme';
+import { Button, IconButton, ripple, Tag as Chip, type IconType } from '@/ui/controls';
+import { useReducedMotion } from '@/ui/motion';
 import { TextField } from '@/ui/fields';
 import { editedLabel, reminderChip } from '@/ui/format';
 import { Banner, EmptyState, TopBar } from '@/ui/layout';
@@ -47,7 +47,7 @@ import { MediaStrip } from '@/ui/media';
 import { LabelChip } from '@/ui/NoteCard';
 import { BottomSheet } from '@/ui/overlays';
 import { useSnackbar } from '@/ui/snackbar';
-import { AppText, focusRing, type PState } from '@/ui/Text';
+import { AppText, focusRing, type PState, stateWash } from '@/ui/Text';
 
 type Sheet = 'colour' | 'font' | 'reminder' | 'attach' | 'add' | 'actions' | 'labels' | 'voice' | null;
 
@@ -83,6 +83,14 @@ function Editor({ note, isNew, attachFirst, recordFirst }: { note: NoteFull; isN
   const [tagError, setTagError] = useState<string | null>(null);
   const allLabels = useQuery((r) => r.listLabels(), []).data ?? [];
   const editable = note.deletedAt === null;
+  const { width } = useWindowDimensions();
+  const reduced = useReducedMotion();
+  // The one signature moment: on a new note, the margin rule draws down the page.
+  const [draw] = useState(() => new Animated.Value(isNew ? 0 : 1));
+  useEffect(() => {
+    if (!isNew) return;
+    Animated.timing(draw, { toValue: 1, duration: reduced ? 0 : t.motion.slow, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start();
+  }, [draw, isNew, reduced, t.motion.slow]);
 
   // ---------------------------------------------------------- autosave
   // Saves as you type: one write in flight at a time, and the newest text
@@ -270,6 +278,8 @@ function Editor({ note, isNew, attachFirst, recordFirst }: { note: NoteFull; isN
   const chip = reminder ? reminderChip(reminder) : null;
   const isList = live.type === 'checklist';
   const maxW = t.layout['editor-max-width'];
+  const margin = isWide(width) ? t.layout['margin-wide'] : t.layout.margin;
+  const inset = margin + t.layout['rule-width'] + t.space[3];
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: bg }} edges={['top', 'left', 'right', 'bottom']}>
@@ -282,7 +292,7 @@ function Editor({ note, isNew, attachFirst, recordFirst }: { note: NoteFull; isN
         actions={
           editable ? (
             <>
-              <IconButton icon={live.pinned ? PinOff : Pin} label={live.pinned ? copy.editor.unpin : copy.editor.pin} active={live.pinned} onPress={togglePin} />
+              <IconButton icon={Pin} label={live.pinned ? copy.editor.unpin : copy.editor.pin} active={live.pinned} onPress={togglePin} />
               <IconButton icon={reminder ? BellRing : BellPlus} label={copy.editor.reminder} active={!!reminder && reminder.status === 'scheduled'} onPress={() => setSheet('reminder')} />
               <IconButton icon={live.archived ? ArchiveRestore : Archive} label={live.archived ? copy.editor.unarchive : copy.editor.archive} onPress={toggleArchive} />
             </>
@@ -297,9 +307,17 @@ function Editor({ note, isNew, attachFirst, recordFirst }: { note: NoteFull; isN
         scrollEnabled={scrollOn}
         keyboardShouldPersistTaps="handled"
         automaticallyAdjustKeyboardInsets
-        contentContainerStyle={{ alignItems: 'center', paddingBottom: t.space[8] }}
+        contentContainerStyle={{ flexGrow: 1, alignItems: 'center', paddingBottom: t.space[8] }}
       >
-        <View style={{ width: '100%', maxWidth: maxW, paddingHorizontal: t.layout.gutter, gap: t.space[2] }}>
+        <View style={{ width: '100%', maxWidth: maxW, flexGrow: 1, paddingLeft: inset, paddingRight: t.layout.gutter, paddingTop: t.space[2], gap: t.space[2] }}>
+          {/* The page's margin rule, in the note's colour. */}
+          <Animated.View
+            aria-hidden
+            style={[
+              styles.rule,
+              { left: margin, width: t.layout['rule-width'], backgroundColor: t.noteRule[live.color], transformOrigin: 'top', transform: [{ scaleY: draw }] },
+            ]}
+          />
           {!editable && (
             <View style={{ gap: t.space[2], marginBottom: t.space[2] }}>
               <Banner message={copy.editor.inTrash} />
@@ -332,14 +350,18 @@ function Editor({ note, isNew, attachFirst, recordFirst }: { note: NoteFull; isN
             maxLength={300}
           />
 
-          {chip && (
-            <Chip
-              icon={BellRing}
-              label={chip.label}
-              tone={chip.overdue ? 'danger' : 'muted'}
-              onPress={editable ? () => setSheet('reminder') : undefined}
-            />
-          )}
+          <View style={styles.meta}>
+            {chip && (
+              // The bell sits in the margin, beside the line it describes.
+              <View aria-hidden style={{ position: 'absolute', left: -inset + (margin - 14) / 2, top: 3 }}>
+                <BellRing size={14} color={chip.overdue ? t.color.danger : t.color.textMuted} strokeWidth={2} />
+              </View>
+            )}
+            <AppText variant="sm" tone="muted" numberOfLines={1}>
+              {copy.editor.edited(editedLabel(live.updatedAt))}
+            </AppText>
+            {chip && <Chip label={chip.label} tone={chip.overdue ? 'danger' : 'muted'} onPress={editable ? () => setSheet('reminder') : undefined} />}
+          </View>
 
           <MediaStrip
             items={live.attachments}
@@ -402,20 +424,18 @@ function Editor({ note, isNew, attachFirst, recordFirst }: { note: NoteFull; isN
         </View>
       )}
 
-      {/* Keep's bottom toolbar: add, colour, text style … "Edited" … more. */}
-      <View style={[styles.toolbar, { backgroundColor: bg, paddingHorizontal: t.space[1] }]}>
-        {editable ? (
+      {/* The page's tools: add, colour, font … more. Labelled, so nobody has to guess an icon. */}
+      {editable ? (
+      <View style={[styles.toolbar, { backgroundColor: bg, borderTopColor: withAlpha(t.color.text, 0.08), paddingHorizontal: t.space[2] }]}>
           <>
-            <IconButton icon={SquarePlus} label={copy.editor.add} onPress={() => setSheet('add')} />
-            <IconButton icon={Palette} label={copy.editor.colour} onPress={() => setSheet('colour')} />
-            <IconButton icon={Type} label={copy.editor.font} onPress={() => setSheet('font')} />
+            <ToolButton icon={SquarePlus} text={copy.editor.add} label={copy.editor.add} onPress={() => setSheet('add')} />
+            <ToolButton icon={Palette} text={copy.editor.colour} label={copy.editor.colour} onPress={() => setSheet('colour')} />
+            <ToolButton icon={Type} text={copy.editor.fontShort} label={copy.editor.font} onPress={() => setSheet('font')} />
+            <View style={{ flex: 1 }} />
+            <IconButton icon={MoreVertical} label={copy.editor.more} onPress={() => setSheet('actions')} />
           </>
-        ) : null}
-        <AppText variant="xs" tone="muted" numberOfLines={1} style={{ flex: 1, textAlign: 'center' }}>
-          {copy.editor.edited(editedLabel(live.updatedAt))}
-        </AppText>
-        {editable ? <IconButton icon={MoreVertical} label={copy.editor.more} onPress={() => setSheet('actions')} /> : <View style={{ width: 48 }} />}
       </View>
+      ) : null}
       </KeyboardAvoidingView>
 
       <BottomSheet open={sheet === 'add'} onClose={() => setSheet(null)} title={copy.editor.add}>
@@ -496,7 +516,7 @@ function PressRow({ children, onPress, label }: { children: ReactNode; onPress: 
       style={(s: PState) => [
         styles.suggestRow,
         { paddingHorizontal: t.space[4] },
-        (s.pressed || s.hovered) && { backgroundColor: withAlpha(t.color.text, 0.06) },
+        stateWash(t, s),
         focusRing(t, s, 0),
       ]}
     >
@@ -505,9 +525,36 @@ function PressRow({ children, onPress, label }: { children: ReactNode; onPress: 
   );
 }
 
+/** A toolbar button with a visible word under its job (the accessible name starts with that word). */
+function ToolButton({ icon: Icon, text, label, onPress }: { icon: IconType; text: string; label: string; onPress: () => void }) {
+  const t = useTheme();
+  return (
+    <Pressable
+      role="button"
+      aria-label={label}
+      onPress={onPress}
+      android_ripple={ripple(t)}
+      style={(s: PState) => [
+        styles.tool,
+        { borderRadius: t.radius.sm, paddingHorizontal: t.space[3] },
+        stateWash(t, s),
+        focusRing(t, s, t.radius.sm),
+      ]}
+    >
+      <Icon size={20} color={t.color.text} strokeWidth={1.75} />
+      <AppText variant="body" weight="500">
+        {text}
+      </AppText>
+    </Pressable>
+  );
+}
+
 const styles = StyleSheet.create({
-  labels: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 8 },
-  toolbar: { flexDirection: 'row', alignItems: 'center', minHeight: 56 },
+  labels: { flexDirection: 'row', flexWrap: 'wrap', columnGap: 12, rowGap: 4, marginTop: 8 },
+  toolbar: { flexDirection: 'row', alignItems: 'center', minHeight: 56, borderTopWidth: StyleSheet.hairlineWidth },
+  tool: { flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 48 },
+  rule: { position: 'absolute', top: 0, bottom: 0 },
+  meta: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: 16, rowGap: 4, marginTop: -4 },
   suggest: { borderTopWidth: StyleSheet.hairlineWidth },
   suggestRow: { flexDirection: 'row', alignItems: 'center', gap: 16, minHeight: 48 },
 });

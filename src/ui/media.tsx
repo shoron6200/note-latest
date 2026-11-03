@@ -12,7 +12,7 @@ import { appFileStore } from '@/data/telegramRunner';
 import { isVisual, type Attachment, type VisualKind } from '@/data/types';
 import { useTheme, withAlpha } from '@/theme/theme';
 
-import { AppText, focusRing, type PState } from './Text';
+import { AppText, focusRing, type PState, stateWash } from './Text';
 
 /** A loadable URI for a stored file; undefined while looking, null when it is not on this phone. */
 export function useFileUri(fileName: string | undefined): string | null | undefined {
@@ -123,7 +123,7 @@ export function MediaStrip({
               borderStyle: 'dashed',
               borderColor: withAlpha(t.color.text, 0.3),
             },
-            (s.pressed || s.hovered) && { backgroundColor: withAlpha(t.color.text, 0.06) },
+            stateWash(t, s),
             focusRing(t, s, t.radius.md),
           ]}
         >
@@ -135,13 +135,18 @@ export function MediaStrip({
 }
 
 /** The first photo or video across the top of a card, with a count when there are more. */
-export function CardCover({ kind, fileName, count }: { kind: VisualKind; fileName: string; count: number }) {
+/**
+ * A note's first photo or video. `cover`: across the top of a grid leaf,
+ * edge to edge. `thumb`: a small square beside an index entry.
+ */
+export function CardCover({ kind, fileName, count, variant = 'cover' }: { kind: VisualKind; fileName: string; count: number; variant?: 'cover' | 'thumb' }) {
   const t = useTheme();
+  const box = variant === 'thumb' ? { width: 56, height: 56, borderRadius: t.radius.sm } : { height: 132 };
   return (
-    <View style={{ marginHorizontal: -t.space[4], marginTop: -t.space[4], height: 132, overflow: 'hidden' }} aria-hidden>
+    <View style={[box, { overflow: 'hidden' }]} aria-hidden>
       <MediaFill kind={kind} fileName={fileName} />
       {count > 1 ? (
-        <View style={[styles.count, { backgroundColor: withAlpha('#000000', 0.6), borderRadius: t.radius.pill }]}>
+        <View style={[styles.count, variant === 'thumb' && styles.countThumb, { backgroundColor: withAlpha('#000000', 0.6), borderRadius: t.radius.xs }]}>
           <AppText variant="xs" weight="600" style={{ color: '#ffffff' }}>
             +{count - 1}
           </AppText>
@@ -157,4 +162,5 @@ const styles = StyleSheet.create({
   play: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', paddingLeft: 3 },
   duration: { position: 'absolute', right: 6, bottom: 4, textShadowColor: 'rgba(0,0,0,0.6)', textShadowRadius: 3 },
   count: { position: 'absolute', right: 8, bottom: 8, paddingHorizontal: 8, paddingVertical: 2 },
+  countThumb: { right: 4, bottom: 4, paddingHorizontal: 4, paddingVertical: 0 },
 });

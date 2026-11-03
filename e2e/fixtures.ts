@@ -37,14 +37,19 @@ export const settle = (page: Page, ms = 600) => page.waitForTimeout(ms);
 export async function openApp(page: Page, opts: { demo?: boolean } = {}) {
   await page.goto(opts.demo ? '/?demo=1' : '/');
   // Seeding the sample notes takes a few seconds when four browsers run at once.
-  // Home has Keep's search bar instead of a title.
+  // Home: the wordmark, with search as an icon button.
   await expect(page.getByRole('button', { name: 'Search your notes', exact: true }).filter({ visible: true })).toBeVisible({ timeout: 20_000 });
   if (opts.demo) await expect(page.getByText('Groceries').first()).toBeVisible({ timeout: 10_000 });
 }
 
+/** Write starts a text note; a list starts from the arrow beside it. */
 export async function newNote(page: Page, kind: 'Note' | 'List') {
-  await button(page, 'New').click();
-  await button(page, kind).click();
+  if (kind === 'Note') {
+    await button(page, 'Write').click();
+  } else {
+    await button(page, 'More ways to start').click();
+    await button(page, kind).click();
+  }
   await settle(page);
 }
 

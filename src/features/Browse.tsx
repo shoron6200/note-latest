@@ -1,8 +1,9 @@
 /**
- * The main screen, laid out like Google Keep: a rounded search bar with the
- * menu button, a navigation drawer (Notes, Reminders, Labels, Folders,
- * Archive, Trash, Settings), "Pinned" / "Others" headings, a speed-dial
- * button for new notes, and long-press multi-select.
+ * The main screen: the Pocketleaf wordmark with search and the view toggle,
+ * a navigation drawer (All notes, Reminders, Folders, Labels, Archive, Trash,
+ * Settings), notes as an index or a grid of leaves, the Write button (tap:
+ * a new note; chevron or long-press: list, photo, voice), and long-press
+ * multi-select.
  */
 import { router } from 'expo-router';
 import {
@@ -14,8 +15,9 @@ import {
   FolderCog,
   Image as ImageIcon,
   LayoutGrid,
-  Lightbulb,
+  Hash,
   Menu,
+  NotebookText,
   Mic,
   MoreVertical,
   Pencil,
@@ -28,8 +30,8 @@ import {
   Trash2,
   Type,
 } from 'lucide-react-native';
-import { useEffect, useState } from 'react';
-import { BackHandler, Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { BackHandler, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { APP_NAME, copy } from '@/copy';
@@ -38,15 +40,16 @@ import type { BrowseView, NoteSummary, NoteType } from '@/data/types';
 import { labelErrorText } from '@/features/labels';
 import { SelectionBar, useSelection } from '@/features/selection';
 import { SheetRow } from '@/features/sheets';
-import { gridColumns, useTheme, withAlpha } from '@/theme/theme';
+import { gridColumns, isWide, useTheme } from '@/theme/theme';
 import { Fab, IconButton } from '@/ui/controls';
 import { DrawerDivider, DrawerHeading, DrawerItem, NavDrawer } from '@/ui/drawer';
 import { TextField } from '@/ui/fields';
 import { EmptyState } from '@/ui/layout';
 import { GridSkeleton, NoteSections, sectionsFor } from '@/ui/NoteGrid';
 import { BottomSheet, Dialog } from '@/ui/overlays';
+import { easeNextLayout, useReducedMotion } from '@/ui/motion';
 import { useSnackbar } from '@/ui/snackbar';
-import { AppText, focusRing, type PState } from '@/ui/Text';
+import { AppText } from '@/ui/Text';
 
 const same = (a: BrowseView, b: BrowseView) => a.kind === b.kind && ('id' in a ? a.id : '') === ('id' in b ? b.id : '');
 
@@ -59,10 +62,13 @@ export function Browse({ fixed }: { fixed?: BrowseView }) {
   const [picked, setPicked] = useState<BrowseView>(fixed ?? { kind: 'notes' });
   const [drawer, setDrawer] = useState(false);
   const [fabOpen, setFabOpen] = useState(false);
+  const [compact, setCompact] = useState(false);
+  const lastY = useRef(0);
   const [menu, setMenu] = useState(false);
   const [dialog, setDialog] = useState<'rename' | 'deleteLabel' | 'emptyTrash' | null>(null);
   const [scrolled, setScrolled] = useState(false);
   const sel = useSelection();
+  const reduced = useReducedMotion();
 
   const labels = useQuery((r) => r.listLabels(), []).data;
   const folders = useQuery((r) => r.listFolders(), []).data;
@@ -76,12 +82,14 @@ export function Browse({ fixed }: { fixed?: BrowseView }) {
   const folder = view.kind === 'folder' ? folders?.find((f) => f.id === view.id) : undefined;
 
   const sort = settings?.sort ?? 'updated';
-  const viewMode = settings?.viewMode ?? 'grid';
+  const viewMode = settings?.viewMode ?? 'list';
   const notes = useQuery((r) => r.listView(view, sort), [view, sort]);
   const list = notes.data;
 
-  const contentWidth = Math.min(width, 1280) - t.layout.gutter * 2;
-  const columns = viewMode === 'list' ? 1 : gridColumns(contentWidth);
+  const gutter = isWide(width) ? t.layout['gutter-wide'] : t.layout.gutter;
+  const columns = viewMode === 'list' ? 1 : gridColumns(Math.min(width, 1280) - gutter * 2);
+  // The index reads best at a book-like measure; the grid may use the room.
+  const contentWidth = Math.min(width - gutter * 2, viewMode === 'list' ? t.layout['list-max-width'] : 1280 - gutter * 2);
   const canCreate = view.kind !== 'archive' && view.kind !== 'trash';
 
   const go = (v: BrowseView) => {
@@ -91,23 +99,30 @@ export function Browse({ fixed }: { fixed?: BrowseView }) {
     setPicked(v);
   };
 
+  // One note per tap: a double tap on Write must not make two.
+  const creating = useRef(false);
   const create = async (type: NoteType, attach?: 'library' | 'voice') => {
     setFabOpen(false);
-    const id = await repo.createNote({
-      type,
-      folderId: view.kind === 'folder' ? view.id : null,
-      labelId: view.kind === 'label' ? view.id : null,
-    });
-    router.push({ pathname: '/note/[id]', params: attach ? { id, isNew: '1', attach } : { id, isNew: '1' } });
+    if (creating.current) return;
+    creating.current = true;
+    try {
+      const id = await repo.createNote({
+        type,
+        folderId: view.kind === 'folder' ? view.id : null,
+        labelId: view.kind === 'label' ? view.id : null,
+      });
+      router.push({ pathname: '/note/[id]', params: attach ? { id, isNew: '1', attach } : { id, isNew: '1' } });
+    } finally {
+      setTimeout(() => (creating.current = false), 600);
+    }
   };
 
-  // Android back: speed dial first, then a drawer view goes back to Notes.
+  // Android back: a drawer view goes back to All notes (the "Start a…" sheet handles its own back).
   useEffect(() => {
-    const busy = fabOpen || (!fixed && view.kind !== 'notes' && !sel.active && !drawer);
+    const busy = !fabOpen && !fixed && view.kind !== 'notes' && !sel.active && !drawer;
     if (!busy) return;
     const sub = BackHandler.addEventListener('hardwareBackPress', () => {
-      if (fabOpen) setFabOpen(false);
-      else setPicked({ kind: 'notes' });
+      setPicked({ kind: 'notes' });
       return true;
     });
     return () => sub.remove();
@@ -151,54 +166,58 @@ export function Browse({ fixed }: { fixed?: BrowseView }) {
     <SafeAreaView style={{ flex: 1, backgroundColor: t.color.bg }} edges={['top', 'left', 'right']}>
       {sel.active ? (
         <SelectionBar notes={selected} inTrash={view.kind === 'trash'} onClear={sel.clear} />
-      ) : view.kind === 'notes' && !fixed ? (
-        <View style={{ paddingHorizontal: t.layout.gutter, paddingVertical: t.space[2], alignItems: 'center' }}>
-          <View
-            style={[
-              styles.searchBar,
-              { width: contentWidth, backgroundColor: t.color.surface, borderRadius: t.radius.pill },
-              scrolled && t.elevation.fab,
-            ]}
-          >
-            {menuButton}
-            <Pressable
-              role="button"
-              aria-label={copy.nav.searchBar}
-              onPress={() => router.push('/search')}
-              style={(s: PState) => [{ flex: 1, alignSelf: 'stretch', justifyContent: 'center', paddingHorizontal: t.space[1] }, focusRing(t, s, t.radius.pill)]}
-            >
-              <AppText tone="muted" numberOfLines={1}>
-                {copy.nav.searchBar}
-              </AppText>
-            </Pressable>
-            {toggleView}
-          </View>
-        </View>
       ) : (
-        <View style={[styles.header, { height: t.layout['top-bar-height'], paddingHorizontal: t.space[1], borderBottomColor: t.color.border, borderBottomWidth: scrolled ? StyleSheet.hairlineWidth : 0 }]}>
+        <View
+          style={[
+            styles.header,
+            {
+              height: t.layout['top-bar-height'],
+              paddingHorizontal: Math.max(t.space[1], (width - contentWidth) / 2 - t.space[3]),
+              borderBottomColor: t.color.border,
+              borderBottomWidth: scrolled ? StyleSheet.hairlineWidth : 0,
+            },
+          ]}
+        >
           {menuButton}
-          <AppText variant="xl" role="heading" numberOfLines={1} style={{ flex: 1, marginLeft: t.space[2] }}>
+          <AppText
+            variant={view.kind === 'label' || view.kind === 'folder' || view.kind === 'notes' ? 'screen' : 'xl'}
+            role="heading"
+            numberOfLines={1}
+            style={{ flex: 1, marginLeft: t.space[1] }}
+          >
             {title}
           </AppText>
-          <IconButton icon={Search} label={copy.home.search} onPress={() => router.push('/search')} />
+          <IconButton icon={Search} label={view.kind === 'notes' && !fixed ? copy.nav.searchBar : copy.home.search} onPress={() => router.push('/search')} />
           {toggleView}
           {hasMenu ? <IconButton icon={MoreVertical} label={copy.home.more} onPress={() => setMenu(true)} /> : null}
         </View>
       )}
 
       <ScrollView
-        onScroll={(e) => setScrolled(e.nativeEvent.contentOffset.y > 4)}
+        onScroll={(e) => {
+          const y = e.nativeEvent.contentOffset.y;
+          setScrolled(y > 4);
+          // The Write button folds to its pen while reading down, and opens again on the way up.
+          if (Math.abs(y - lastY.current) > 8) {
+            const next = y > lastY.current && y > 48;
+            if (next !== compact) {
+              easeNextLayout(reduced);
+              setCompact(next);
+            }
+            lastY.current = y;
+          }
+        }}
         scrollEventThrottle={32}
         contentContainerStyle={{ paddingBottom: t.layout['fab-size'] * 2 + t.space[6] }}
       >
         <View style={{ width: contentWidth, paddingTop: t.space[2], alignSelf: 'center', gap: t.space[3] }}>
           {view.kind === 'trash' && list && list.length > 0 ? (
-            <AppText variant="sm" tone="muted" style={{ textAlign: 'center' }}>
+            <AppText variant="sm" tone="muted" style={{ paddingHorizontal: t.space[1] }}>
               {copy.trash.hint}
             </AppText>
           ) : null}
           {notes.error ? (
-            <EmptyState icon={Lightbulb} title={copy.home.loadError} body={notes.error.message} action={{ label: copy.common.tryAgain, onPress: notes.reload }} />
+            <EmptyState title={copy.home.loadError} body={notes.error.message} action={{ label: copy.common.tryAgain, onPress: notes.reload }} />
           ) : !list ? (
             <GridSkeleton columns={columns} />
           ) : list.length === 0 ? (
@@ -217,49 +236,33 @@ export function Browse({ fixed }: { fixed?: BrowseView }) {
         </View>
       </ScrollView>
 
-      {fabOpen && (
-        <Pressable
-          role="button"
-          aria-label={copy.common.close}
-          onPress={() => setFabOpen(false)}
-          style={[StyleSheet.absoluteFill, { backgroundColor: withAlpha(t.color.scrim, 0.32) }]}
-        />
-      )}
       {canCreate && !sel.active && (
         <Fab
-          expanded={fabOpen}
-          onPress={() => setFabOpen(!fabOpen)}
-          style={{ position: 'absolute', right: t.layout['fab-offset'], bottom: t.layout['fab-offset'] + t.space[4] }}
-          actions={[
-            { label: copy.newItem.voice, icon: Mic, onPress: () => create('text', 'voice') },
-            { label: copy.newItem.image, icon: ImageIcon, onPress: () => create('text', 'library') },
-            { label: copy.newItem.checklist, icon: CheckSquare, onPress: () => create('checklist') },
-            { label: copy.newItem.text, icon: Type, onPress: () => create('text') },
-          ]}
+          compact={compact}
+          onPress={() => create('text')}
+          onMore={() => setFabOpen(true)}
+          style={{ position: 'absolute', right: Math.max(t.layout['fab-offset'], (width - contentWidth) / 2), bottom: t.layout['fab-offset'] + t.space[4] }}
         />
       )}
+      <BottomSheet open={fabOpen} onClose={() => setFabOpen(false)} title={copy.newItem.moreTitle}>
+        <SheetRow icon={Type} label={copy.newItem.text} onPress={() => create('text')} />
+        <SheetRow icon={CheckSquare} label={copy.newItem.checklist} onPress={() => create('checklist')} />
+        <SheetRow icon={ImageIcon} label={copy.newItem.image} onPress={() => create('text', 'library')} />
+        <SheetRow icon={Mic} label={copy.newItem.voice} onPress={() => create('text', 'voice')} />
+      </BottomSheet>
 
       {!fixed && (
         <NavDrawer
           open={drawer}
           onClose={() => setDrawer(false)}
           header={
-            <AppText variant="xl" weight="700" role="heading" style={{ paddingHorizontal: t.space[6], paddingVertical: t.space[3] }}>
+            <AppText variant="screen" role="heading" style={{ paddingHorizontal: t.space[6], paddingTop: t.space[3], paddingBottom: t.space[4] }}>
               {APP_NAME}
             </AppText>
           }
         >
-          <DrawerItem icon={Lightbulb} label={copy.nav.notes} selected={view.kind === 'notes'} onPress={() => go({ kind: 'notes' })} />
+          <DrawerItem icon={NotebookText} label={copy.nav.notes} selected={view.kind === 'notes'} onPress={() => go({ kind: 'notes' })} />
           <DrawerItem icon={Bell} label={copy.nav.reminders} selected={view.kind === 'reminders'} onPress={() => go({ kind: 'reminders' })} />
-          <DrawerDivider />
-          <DrawerHeading
-            label={copy.nav.labels}
-            action={labels?.length ? { label: copy.nav.editLabels, a11y: copy.nav.editLabelsA11y, onPress: () => (setDrawer(false), router.push('/labels')) } : undefined}
-          />
-          {labels?.map((l) => (
-            <DrawerItem key={l.id} icon={Tag} label={l.name} selected={same(view, { kind: 'label', id: l.id })} onPress={() => go({ kind: 'label', id: l.id })} />
-          ))}
-          <DrawerItem icon={Plus} label={copy.nav.createLabel} onPress={() => (setDrawer(false), router.push({ pathname: '/labels', params: { create: '1' } }))} />
           <DrawerDivider />
           <DrawerHeading label={copy.nav.folders} action={{ label: copy.nav.editLabels, a11y: copy.nav.manageFolders, onPress: () => (setDrawer(false), router.push('/folders')) }} />
           {folders?.map((f) => (
@@ -268,6 +271,18 @@ export function Browse({ fixed }: { fixed?: BrowseView }) {
           {folders && folders.length === 0 ? (
             <DrawerItem icon={FolderCog} label={copy.nav.manageFolders} onPress={() => (setDrawer(false), router.push('/folders'))} />
           ) : null}
+          {labels?.length ? (
+            <>
+              <DrawerDivider />
+              <DrawerHeading label={copy.nav.labels} action={{ label: copy.nav.editLabels, a11y: copy.nav.editLabelsA11y, onPress: () => (setDrawer(false), router.push('/labels')) }} />
+              {labels.map((l) => (
+                <DrawerItem key={l.id} icon={Hash} label={l.name} selected={same(view, { kind: 'label', id: l.id })} onPress={() => go({ kind: 'label', id: l.id })} />
+              ))}
+            </>
+          ) : (
+            <DrawerDivider />
+          )}
+          <DrawerItem icon={Plus} label={copy.nav.createLabel} onPress={() => (setDrawer(false), router.push({ pathname: '/labels', params: { create: '1' } }))} />
           <DrawerDivider />
           <DrawerItem icon={Archive} label={copy.nav.archive} selected={view.kind === 'archive'} onPress={() => go({ kind: 'archive' })} />
           <DrawerItem icon={Trash2} label={copy.nav.trash} selected={view.kind === 'trash'} onPress={() => go({ kind: 'trash' })} />
@@ -335,7 +350,7 @@ function Empty({ view }: { view: BrowseView }) {
     case 'folder':
       return <EmptyState icon={FolderIcon} title={copy.home.emptyFolderTitle} body={copy.home.emptyFolderBody} />;
     default:
-      return <EmptyState icon={Lightbulb} title={copy.home.emptyTitle} body={copy.home.emptyBody} />;
+      return <EmptyState title={copy.home.emptyTitle} body={copy.home.emptyBody} />;
   }
 }
 
@@ -373,6 +388,5 @@ function RenameLabelBody({ onClose, id, name: initial }: { onClose: () => void; 
 }
 
 const styles = StyleSheet.create({
-  searchBar: { flexDirection: 'row', alignItems: 'center', height: 52, paddingHorizontal: 4 },
   header: { flexDirection: 'row', alignItems: 'center', gap: 2 },
 });

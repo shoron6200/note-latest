@@ -1,10 +1,11 @@
-import type { ReactNode } from 'react';
-import { Modal, Pressable, StyleSheet, View } from 'react-native';
+import { useState, type ReactNode } from 'react';
+import { Animated, Modal, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useTheme, withAlpha } from '@/theme/theme';
 
 import { Button } from './controls';
+import { usePresence, useReducedMotion } from './motion';
 import { AppText } from './Text';
 
 /** The web Modal passes extra props to its dialog element, which needs a name. */
@@ -30,7 +31,7 @@ export function SheetSurface({ title, children }: { title?: string; children: Re
         t.elevation.sheet,
       ]}
     >
-      <View style={[styles.grab, { backgroundColor: t.color.borderInput }]} />
+      <View style={[styles.grab, { backgroundColor: t.color.border }]} />
       {title ? (
         <AppText variant="lg" role="heading" style={{ paddingHorizontal: t.space[4], marginBottom: t.space[2] }}>
           {title}
@@ -53,16 +54,31 @@ export function BottomSheet({
   children: ReactNode;
 }) {
   const t = useTheme();
+  const reduced = useReducedMotion();
+  // The scrim fades while the sheet rises from the bottom edge it belongs to;
+  // closing is quicker than opening. Reduce Motion: a short fade, no travel.
+  const { mounted, progress } = usePresence(open, reduced ? t.motion.reduced : t.motion.base, reduced ? t.motion.reduced : t.motion.fast);
+  const [height, setHeight] = useState(480);
+  if (!mounted) return null;
+  // The whole sheet travels from below the screen's edge, so it reads as coming from there.
+  const rise = reduced ? 0 : height;
   return (
-    <Modal visible={open} transparent animationType="slide" onRequestClose={onClose} statusBarTranslucent navigationBarTranslucent {...dialogName(title)}>
-      <View style={styles.sheetHost}>
-        <Pressable
-          role="button"
-          aria-label="Close"
-          onPress={onClose}
-          style={[StyleSheet.absoluteFill, { backgroundColor: withAlpha(t.color.scrim, 0.4) }]}
-        />
-        <SheetSurface title={title}>{children}</SheetSurface>
+    <Modal visible transparent animationType="none" onRequestClose={onClose} statusBarTranslucent navigationBarTranslucent {...dialogName(title)}>
+      <View style={styles.sheetHost} pointerEvents={open ? 'auto' : 'none'}>
+        <Animated.View style={[StyleSheet.absoluteFill, { opacity: progress, backgroundColor: withAlpha(t.color.scrim, 0.4) }]}>
+          <Pressable role="button" aria-label="Close" onPress={onClose} style={StyleSheet.absoluteFill} />
+        </Animated.View>
+        <Animated.View
+          onLayout={(e) => setHeight(Math.ceil(e.nativeEvent.layout.height))}
+          style={{
+            width: '100%',
+            alignItems: 'center',
+            opacity: reduced ? progress : 1,
+            transform: [{ translateY: progress.interpolate({ inputRange: [0, 1], outputRange: [rise, 0] }) }],
+          }}
+        >
+          <SheetSurface title={title}>{children}</SheetSurface>
+        </Animated.View>
       </View>
     </Modal>
   );
@@ -90,12 +106,12 @@ export function DialogSurface({
     <View
       role={confirm.variant === 'danger' ? 'alertdialog' : 'dialog'}
       aria-label={title}
-      style={[styles.dialog, { backgroundColor: t.color.surfaceRaised, borderRadius: t.radius.lg, padding: t.space[6] }, t.elevation.sheet]}
+      style={[styles.dialog, { backgroundColor: t.color.surfaceRaised, borderRadius: t.radius.dialog, padding: t.space[6] }, t.elevation.sheet]}
     >
       <AppText variant="lg" role="heading">
         {title}
       </AppText>
-      {body ? <AppText tone="muted">{body}</AppText> : null}
+      {body ? <AppText variant="body" tone="muted">{body}</AppText> : null}
       {children}
       <View style={styles.dialogActions}>
         {/* Cancel first in reading order: the safe action gets initial focus on destructive dialogs. */}
@@ -108,11 +124,25 @@ export function DialogSurface({
 
 export function Dialog(props: Parameters<typeof DialogSurface>[0] & { open: boolean }) {
   const t = useTheme();
+  const reduced = useReducedMotion();
   const { open, ...rest } = props;
+  // A dialog interrupts in place: it fades up from 97% (no travel), and leaves faster.
+  const { mounted, progress } = usePresence(open, reduced ? t.motion.reduced : t.motion.fast, reduced ? t.motion.reduced : 120);
+  if (!mounted) return null;
   return (
-    <Modal visible={open} transparent animationType="fade" onRequestClose={rest.cancel.onPress} statusBarTranslucent {...dialogName(rest.title)}>
-      <View style={[styles.dialogHost, { backgroundColor: withAlpha(t.color.scrim, 0.4) }]}>
-        <DialogSurface {...rest} />
+    <Modal visible transparent animationType="none" onRequestClose={rest.cancel.onPress} statusBarTranslucent {...dialogName(rest.title)}>
+      <View style={styles.dialogHost} pointerEvents={open ? 'auto' : 'none'}>
+        <Animated.View style={[StyleSheet.absoluteFill, { opacity: progress, backgroundColor: withAlpha(t.color.scrim, 0.4) }]} />
+        <Animated.View
+          style={{
+            width: '100%',
+            alignItems: 'center',
+            opacity: progress,
+            transform: reduced ? [] : [{ scale: progress.interpolate({ inputRange: [0, 1], outputRange: [0.97, 1] }) }],
+          }}
+        >
+          <DialogSurface {...rest} />
+        </Animated.View>
       </View>
     </Modal>
   );
@@ -125,14 +155,14 @@ export function Snackbar({ message, action }: { message: string; action?: { labe
   return (
     <View
       aria-live="polite"
-      style={[styles.snack, { backgroundColor: t.color.snackbarBg, borderRadius: t.radius.md }, t.elevation.snackbar]}
+      style={[styles.snack, { backgroundColor: t.color.snackbarBg, borderRadius: t.radius.sm }, t.elevation.snackbar]}
     >
-      <AppText variant="sm" style={{ color: t.color.snackbarText, flex: 1 }}>
+      <AppText variant="body" style={{ color: t.color.snackbarText, flex: 1 }}>
         {message}
       </AppText>
       {action ? (
         <Pressable role="button" aria-label={action.label} onPress={action.onPress} hitSlop={12} style={{ paddingHorizontal: 8, minHeight: 36, justifyContent: 'center' }}>
-          <AppText variant="sm" weight="700" style={{ color: t.color.snackbarAction }}>
+          <AppText variant="body" weight="600" style={{ color: t.color.snackbarAction }}>
             {action.label}
           </AppText>
         </Pressable>
@@ -144,7 +174,7 @@ export function Snackbar({ message, action }: { message: string; action?: { labe
 const styles = StyleSheet.create({
   sheetHost: { flex: 1, justifyContent: 'flex-end', alignItems: 'center' },
   sheet: { width: '100%', paddingTop: 8 },
-  grab: { width: 36, height: 4, borderRadius: 2, alignSelf: 'center', marginBottom: 12, opacity: 0.6 },
+  grab: { width: 32, height: 4, borderRadius: 2, alignSelf: 'center', marginBottom: 12 },
   dialogHost: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
   dialog: { width: '100%', maxWidth: 400, gap: 12 },
   dialogActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 8, marginTop: 8 },

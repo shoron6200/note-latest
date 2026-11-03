@@ -312,7 +312,7 @@ function VoiceSheetBody({
 
         {plan?.mode !== 'sound' && heard ? (
           <View style={{ gap: 4 }}>
-            <AppText variant="xs" weight="700" tone="muted" style={{ textTransform: 'uppercase', letterSpacing: 0.8 }}>
+            <AppText variant="sm" weight="600" tone="muted">
               {copy.voice.heard}
             </AppText>
             <ScrollView style={{ maxHeight: 120 }}>

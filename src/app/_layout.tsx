@@ -2,7 +2,7 @@ import { router, Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { DatabaseZap } from 'lucide-react-native';
 import { useEffect } from 'react';
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { copy } from '@/copy';
@@ -10,7 +10,8 @@ import { DataProvider, useRepo, useSettings } from '@/data/DataProvider';
 import { IncomingShareProvider, useIncomingShare } from '@/features/incomingShare';
 import { useNoteFonts } from '@/theme/fonts';
 import { ModeSetterContext } from '@/theme/mode';
-import { ModeContext, useTheme } from '@/theme/theme';
+import { ModeContext, useTheme, withAlpha } from '@/theme/theme';
+import { useReducedMotion } from '@/ui/motion';
 import { EmptyState } from '@/ui/layout';
 import { SnackbarHost } from '@/ui/snackbar';
 
@@ -26,13 +27,37 @@ function ShareWatcher() {
   return null;
 }
 
+/**
+ * Web only: the parts of the page no component draws (text selection, the
+ * caret, scrollbars) take the theme too, instead of browser blue and grey.
+ */
+function useWebSurfaces() {
+  const t = useTheme();
+  useEffect(() => {
+    if (Platform.OS !== 'web' || typeof document === 'undefined') return;
+    const el = document.createElement('style');
+    el.setAttribute('data-pocketleaf', 'surfaces');
+    el.textContent = `
+      ::selection { background: ${withAlpha(t.color.accent, t.mode === 'dark' ? 0.35 : 0.22)}; color: inherit; }
+      input, textarea { caret-color: ${t.color.accent}; }
+      * { scrollbar-color: ${withAlpha(t.color.text, 0.22)} transparent; scrollbar-width: thin; }
+      body { background: ${t.color.bg}; -webkit-tap-highlight-color: transparent; }
+    `;
+    document.head.appendChild(el);
+    return () => el.remove();
+  }, [t]);
+}
+
 function Screens() {
   const t = useTheme();
+  const reduced = useReducedMotion();
+  useWebSurfaces();
   return (
     <>
       <StatusBar style={t.mode === 'dark' ? 'light' : 'dark'} />
       <SnackbarHost>
-        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: t.color.bg }, animation: 'default' }} />
+        {/* Each platform's own push transition (iOS slide with edge-swipe back, Android's); a fade with Reduce Motion. */}
+        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: t.color.bg }, animation: reduced ? 'fade' : 'default' }} />
         <ShareWatcher />
       </SnackbarHost>
     </>

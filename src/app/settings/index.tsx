@@ -21,7 +21,7 @@ function Group({ title, children }: { title?: string; children: ReactNode }) {
   return (
     <View style={{ gap: t.space[2], marginBottom: t.space[6] }}>
       {title ? (
-        <AppText variant="xs" weight="700" tone="muted" role="heading" style={{ textTransform: 'uppercase', letterSpacing: 1, paddingHorizontal: t.space[1] }}>
+        <AppText variant="sm" weight="600" tone="muted" role="heading" style={{ paddingHorizontal: t.space[4] }}>
           {title}
         </AppText>
       ) : null}
@@ -56,8 +56,11 @@ export default function SettingsScreen() {
       <TopBar onBack={() => router.back()} title={copy.settings.title} />
       <ScrollView contentContainerStyle={{ alignItems: 'center', padding: t.layout.gutter }}>
         <View style={{ width: '100%', maxWidth: t.layout['editor-max-width'] }}>
-          <Group title={copy.settings.theme}>
-            <View style={{ padding: t.space[3] }}>
+          <Group title={copy.settings.appearance}>
+            <View style={{ padding: t.space[4], gap: t.space[2], borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: t.color.border }}>
+              <AppText variant="sm" tone="muted">
+                {copy.settings.theme}
+              </AppText>
               <Segmented<ThemeSetting>
                 label={copy.settings.theme}
                 value={settings.theme}
@@ -65,11 +68,12 @@ export default function SettingsScreen() {
                 options={(['system', 'light', 'dark'] as const).map((v) => ({ value: v, label: copy.settings.themes[v] }))}
               />
             </View>
+
+            <SettingsRow title={copy.settings.view} toggle={settings.viewMode === 'grid'} onToggle={(v) => repo.setSetting('viewMode', v ? 'grid' : 'list')} last />
           </Group>
 
-          <Group title={copy.home.title}>
-            <SettingsRow title={copy.settings.view} toggle={settings.viewMode === 'grid'} onToggle={(v) => repo.setSetting('viewMode', v ? 'grid' : 'list')} />
-            <View style={{ padding: t.space[3], gap: t.space[2] }}>
+          <Group title={copy.settings.organising}>
+            <View style={{ padding: t.space[4], gap: t.space[2], borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: t.color.border }}>
               <AppText variant="sm" tone="muted">
                 {copy.settings.sort}
               </AppText>
@@ -81,10 +85,10 @@ export default function SettingsScreen() {
               />
             </View>
             <SettingsRow title={copy.settings.folders} onPress={() => router.push('/folders')} />
-            <SettingsRow title={copy.settings.trash} onPress={() => router.push('/trash')} />
+            <SettingsRow title={copy.settings.trash} onPress={() => router.push('/trash')} last />
           </Group>
 
-          <Group title={copy.settings.backup}>
+          <Group title={copy.settings.backupGroup}>
             <SettingsRow
               title={copy.settings.backup}
               subtitle={copy.backup.last(settings.lastBackupAt ? whenLabel(settings.lastBackupAt) : null)}
@@ -94,6 +98,7 @@ export default function SettingsScreen() {
               title={copy.settings.telegram}
               subtitle={tg.link ? copy.telegram.rowOn(tg.link.botName) : tg.ready && !tg.supported ? copy.telegram.webOnly : copy.telegram.rowOff}
               onPress={() => router.push('/settings/telegram')}
+              last
             />
           </Group>
 
@@ -103,16 +108,17 @@ export default function SettingsScreen() {
               subtitle={copy.settings.voiceOnlineHint}
               toggle={settings.voiceOnline}
               onToggle={(v) => repo.setSetting('voiceOnline', v)}
+              last
             />
           </Group>
 
           <Group title={copy.settings.reminders}>
-            <SettingsRow title={copy.settings.reminders} subtitle={permText} value={perm?.notifications === 'granted' ? undefined : copy.reminder.openSettings} onPress={openAppSettings} />
+            <SettingsRow title={copy.settings.notifications} subtitle={permText} value={perm?.notifications === 'granted' ? undefined : copy.reminder.openSettings} onPress={openAppSettings} last />
           </Group>
 
           <Group title={copy.settings.about}>
             <View style={{ padding: t.space[4], gap: t.space[2] }}>
-              <AppText>{copy.settings.aboutBody}</AppText>
+              <AppText variant="body">{copy.settings.aboutBody}</AppText>
               <AppText variant="sm" tone="muted">
                 {copy.settings.version(Constants.expoConfig?.version ?? '1.0.0')}
               </AppText>

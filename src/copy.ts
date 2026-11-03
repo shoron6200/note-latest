@@ -9,7 +9,7 @@ export const copy = {
   home: {
     title: APP_NAME,
     emptyTitle: 'A blank page',
-    emptyBody: 'Tap + to start a note or a list. It stays on this phone.',
+    emptyBody: 'Tap Write to start a note. Lists, photos and voice notes are under the arrow beside it. Everything stays on this phone.',
     emptyFolderTitle: 'Nothing in here yet',
     emptyFolderBody: 'New notes you make while this folder is open land in it.',
     all: 'All',
@@ -23,7 +23,9 @@ export const copy = {
     otherTabBody: 'Your notes can be open in one tab at a time. Close the other tab, then reload this one.',
   },
   newItem: {
-    fabLabel: 'New',
+    fabLabel: 'Write',
+    more: 'More ways to start',
+    moreTitle: 'New',
     text: 'Note',
     textHint: 'Write it down',
     checklist: 'List',
@@ -45,6 +47,7 @@ export const copy = {
     unpin: 'Unpin',
     colour: 'Colour',
     font: 'Font and size',
+    fontShort: 'Font',
     reminder: 'Remind me',
     more: 'More',
     textSize: 'Text size',
@@ -307,6 +310,10 @@ export const copy = {
   },
   settings: {
     title: 'Settings',
+    appearance: 'Appearance',
+    organising: 'Organising',
+    backupGroup: 'Backup',
+    notifications: 'Reminder notifications',
     theme: 'Theme',
     themes: { system: 'System', light: 'Light', dark: 'Dark' },
     view: 'Show notes as a grid',
@@ -327,12 +334,12 @@ export const copy = {
     voice: 'Voice notes',
     voiceOnline: 'Online speech-to-text',
     voiceOnlineHint:
-      'When this phone has no offline speech pack for your language, let its online speech service (Google) turn voice notes into text. Off: the sound is kept without text, and nothing leaves the phone.',
+      'If this phone can’t turn speech into text offline, use its online service (Google). Off: only the sound is kept, and nothing leaves the phone.',
   },
   nav: {
     open: 'Open menu',
     close: 'Close menu',
-    notes: 'Notes',
+    notes: 'All notes',
     reminders: 'Reminders',
     labels: 'Labels',
     editLabels: 'Edit',

@@ -36,7 +36,7 @@ export default function FoldersScreen() {
           {!folders ? null : folders.length === 0 ? (
             <EmptyState icon={FolderIcon} title={copy.folder.emptyTitle} body={copy.folder.emptyBody} action={{ label: copy.folder.newTitle, onPress: () => setEditing('new') }} />
           ) : (
-            <View role="list" style={{ backgroundColor: t.color.surfaceRaised, borderRadius: t.radius.md, overflow: 'hidden', borderWidth: 1, borderColor: t.color.border }}>
+            <View role="list" style={{ backgroundColor: t.color.surfaceRaised, borderRadius: t.radius.md, overflow: 'hidden', borderWidth: StyleSheet.hairlineWidth, borderColor: t.color.border }}>
               {folders.map((f, i) => (
                 <View
                   key={f.id}
@@ -46,15 +46,15 @@ export default function FoldersScreen() {
                     { paddingLeft: t.space[4], borderTopWidth: i ? StyleSheet.hairlineWidth : 0, borderTopColor: t.color.border },
                   ]}
                 >
-                  <FolderIcon size={22} color={t.color.textMuted} />
+                  <FolderIcon size={20} color={t.color.textMuted} strokeWidth={1.75} />
                   <View style={{ flex: 1, paddingVertical: t.space[3] }}>
-                    <AppText numberOfLines={2}>{f.name}</AppText>
-                    <AppText variant="sm" tone="muted">
+                    <AppText variant="entry" numberOfLines={2}>{f.name}</AppText>
+                    <AppText variant="sm" tone="muted" style={{ fontVariant: ['tabular-nums'] }}>
                       {copy.folder.count(f.count)}
                     </AppText>
                   </View>
                   <IconButton icon={Pencil} label={`${copy.folder.rename} ${f.name}`} onPress={() => setEditing(f)} />
-                  <IconButton icon={Trash2} label={`${copy.folder.delete} ${f.name}`} variant="danger" onPress={() => setDeleting(f)} />
+                  <IconButton icon={Trash2} label={`${copy.folder.delete} ${f.name}`} onPress={() => setDeleting(f)} />
                 </View>
               ))}
             </View>

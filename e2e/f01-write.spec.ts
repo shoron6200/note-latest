@@ -72,10 +72,9 @@ test.describe('F01 write a quick text note', () => {
     await expect(button(page, /^Saved before refresh typed just now/)).toBeVisible();
   });
 
-  test('F01-E6 double-click on Note makes one note', async ({ page }) => {
+  test('F01-E6 double-click on Write makes one note', async ({ page }) => {
     await openApp(page);
-    await button(page, 'New').click();
-    await button(page, 'Note').dblclick();
+    await button(page, 'Write').dblclick();
     await settle(page);
     await field(page, 'Title').fill('Only one');
     await settle(page, 700);
@@ -97,11 +96,8 @@ test.describe('F01 write a quick text note', () => {
     await openApp(page);
     for (let i = 0; i < 40; i++) {
       await page.keyboard.press('Tab');
-      if ((await page.evaluate(() => document.activeElement?.getAttribute('aria-label'))) === 'New') break;
+      if ((await page.evaluate(() => document.activeElement?.getAttribute('aria-label'))) === 'Write') break;
     }
-    await page.keyboard.press('Enter');
-    await expect(button(page, 'Note')).toBeVisible();
-    await button(page, 'Note').focus();
     await page.keyboard.press('Enter');
     await settle(page);
     // A new note starts in the body, like a sheet of paper; the title is optional.

@@ -13,9 +13,9 @@ import { copy } from '@/copy';
 import { useQuery, useRepo } from '@/data/DataProvider';
 import { LABEL_MAX_CHARS } from '@/data/repo';
 import { DuplicateLabelError, LabelLimitError } from '@/data/types';
-import { useTheme, withAlpha } from '@/theme/theme';
+import { useTheme } from '@/theme/theme';
 import { IconButton } from '@/ui/controls';
-import { AppText, focusRing, type PState } from '@/ui/Text';
+import { AppText, focusRing, type PState, stateWash } from '@/ui/Text';
 
 /** The message to show for a failed create or rename. */
 export function labelErrorText(e: unknown): string {
@@ -184,7 +184,7 @@ function Row({
       style={(s: PState) => [
         styles.row,
         { paddingHorizontal: t.space[4] },
-        (s.pressed || s.hovered) && { backgroundColor: withAlpha(t.color.text, 0.06) },
+        stateWash(t, s),
         focusRing(t, s, 0),
       ]}
     >

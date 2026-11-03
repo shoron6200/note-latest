@@ -342,7 +342,7 @@ describe('settings', () => {
   test('defaults and round trip', async () => {
     const { repo } = await setup();
     assert.deepEqual(await repo.getSettings(), {
-      viewMode: 'grid',
+      viewMode: 'list',
       sort: 'updated',
       theme: 'system',
       lastBackupAt: null,

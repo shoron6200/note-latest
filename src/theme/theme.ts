@@ -28,17 +28,19 @@ function uiColors(mode: Mode): UiColors {
   return Object.fromEntries(Object.entries(src).map(([k, v]) => [camel(k), v])) as UiColors;
 }
 
-type TypeName = 'xs' | 'sm' | 'base' | 'lg' | 'xl' | 'display';
-export type TypeStyle = { fontSize: number; lineHeight: number; fontWeight: '400' | '500' | '600' | '700' };
+export type TypeName = 'xs' | 'sm' | 'body' | 'base' | 'lg' | 'xl' | 'display' | 'entry' | 'screen' | 'page';
+export type TypeStyle = { fontSize: number; lineHeight: number; fontWeight: '400' | '500' | '600' | '700'; fontFamily?: string };
+
+/** The serif carries the user's words (titles, names); the system sans carries the app's. */
+export const SERIF = 'SourceSerif4_600SemiBold';
 
 function typeScale(): Record<TypeName, TypeStyle> {
   const out = {} as Record<TypeName, TypeStyle>;
-  for (const [k, v] of Object.entries(tokens.type)) {
-    out[k as TypeName] = {
-      fontSize: v.size,
-      lineHeight: v.line,
-      fontWeight: String(v.weight) as TypeStyle['fontWeight'],
-    };
+  for (const [k, v] of Object.entries(tokens.type) as [string, { size: number; line: number; weight: number; serif?: boolean }][]) {
+    out[k as TypeName] = v.serif
+      // Custom fonts carry their weight in the family name; fontWeight stays normal so nothing is faked.
+      ? { fontSize: v.size, lineHeight: v.line, fontWeight: '400', fontFamily: SERIF }
+      : { fontSize: v.size, lineHeight: v.line, fontWeight: String(v.weight) as TypeStyle['fontWeight'] };
   }
   return out;
 }
@@ -65,18 +67,21 @@ export function makeTheme(mode: Mode) {
   return {
     mode,
     color: uiColors(mode),
+    /** A note's wash: the faint tint behind its text. */
     note: tokens.color.note[mode] as Record<NoteColor, string>,
+    /** A note's margin rule: the coloured line down its leading edge. */
+    noteRule: tokens.color['note-rule'][mode] as Record<NoteColor, string>,
     type: typeScale(),
     noteSize: tokens['note-size'] as Record<NoteSize, { size: number; line: number }>,
     space,
-    radius: tokens.radius,
+    radius: { xs: tokens.radius.xs, sm: tokens.radius.sm, md: tokens.radius.md, lg: tokens.radius.lg, dialog: tokens.radius.dialog, pill: tokens.radius.pill },
     elevation: {
       card: elevate(e.card, mode),
       fab: elevate(e.fab, mode),
       sheet: elevate(e.sheet, mode),
       snackbar: elevate(e.snackbar, mode),
     },
-    motion: { fast: tokens.motion.fast, base: tokens.motion.base, slow: tokens.motion.slow },
+    motion: { fast: tokens.motion.fast, base: tokens.motion.base, slow: tokens.motion.slow, reduced: tokens.motion.reduced },
     layout: tokens.layout,
   };
 }
@@ -94,6 +99,11 @@ export function useTheme(): Theme {
   const os = useColorScheme();
   const mode: Mode = setting === 'system' ? (os === 'dark' ? 'dark' : 'light') : setting;
   return mode === 'dark' ? darkTheme : lightTheme;
+}
+
+/** Phone vs. tablet/desktop: wider gutters and margin column from the medium breakpoint. */
+export function isWide(width: number): boolean {
+  return width >= tokens.layout.breakpoints.medium;
 }
 
 /** Columns for the home grid at a given window width (layout.columns / breakpoints). */
